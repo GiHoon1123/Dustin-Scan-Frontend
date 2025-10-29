@@ -4,24 +4,41 @@ import { useEffect, useState } from "react";
 
 export default function DarkModeToggle() {
   const [isDark, setIsDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // 초기 다크모드 상태 확인
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    setMounted(true);
+    // localStorage 또는 시스템 설정에서 초기 상태 확인
+    const savedTheme = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
       setIsDark(true);
       document.documentElement.classList.add("dark");
+    } else {
+      setIsDark(false);
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 
   const toggleDark = () => {
     if (isDark) {
       document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
       setIsDark(false);
     } else {
       document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
       setIsDark(true);
     }
   };
+
+  // 마운트되기 전에는 아무것도 렌더링하지 않음 (SSR 불일치 방지)
+  if (!mounted) {
+    return (
+      <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+    );
+  }
 
   return (
     <button

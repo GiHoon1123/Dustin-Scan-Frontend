@@ -10,6 +10,7 @@ interface SearchBarProps {
 
 export default function SearchBar({ placeholder, type }: SearchBarProps) {
   const [search, setSearch] = useState("");
+  const [searchType, setSearchType] = useState<"number" | "hash">("number");
   const router = useRouter();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -17,14 +18,8 @@ export default function SearchBar({ placeholder, type }: SearchBarProps) {
     if (!search.trim()) return;
 
     if (type === "block") {
-      // 숫자면 블록 번호, 아니면 해시
-      if (/^\d+$/.test(search.trim())) {
-        router.push(`/blocks/${search.trim()}`);
-      } else {
-        router.push(`/blocks/${search.trim()}`);
-      }
+      router.push(`/blocks/${search.trim()}`);
     } else {
-      // 트랜잭션 해시
       router.push(`/transactions/${search.trim()}`);
     }
   };
@@ -32,11 +27,27 @@ export default function SearchBar({ placeholder, type }: SearchBarProps) {
   return (
     <form onSubmit={handleSearch} className="mb-6">
       <div className="flex gap-2">
+        {type === "block" && (
+          <select
+            value={searchType}
+            onChange={(e) => setSearchType(e.target.value as "number" | "hash")}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="number">Block Number</option>
+            <option value="hash">Block Hash</option>
+          </select>
+        )}
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={placeholder}
+          placeholder={
+            type === "block"
+              ? searchType === "number"
+                ? "Enter block number..."
+                : "Enter block hash (0x...)..."
+              : placeholder
+          }
           className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button

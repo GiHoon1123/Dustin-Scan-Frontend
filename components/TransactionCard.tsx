@@ -70,8 +70,15 @@ export default function TransactionCard({ transaction }: TransactionCardProps) {
 }
 
 function getTimeAgo(timestamp: number): string {
-  const seconds = Math.floor(Date.now() - timestamp);
-  if (seconds < 60) return `${Math.floor(seconds / 1000)} secs ago`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60000)} mins ago`;
-  return `${Math.floor(seconds / 3600000)} hours ago`;
+  const now = Date.now();
+  const diff = now - timestamp; // 밀리초 차이
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (seconds < 60) return `${seconds} secs ago`;
+  if (minutes < 60) return `${minutes} mins ago`;
+  if (hours < 24) return `${hours} hours ago`;
+  return `${days} days ago`;
 }
