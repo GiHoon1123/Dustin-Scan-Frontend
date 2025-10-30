@@ -24,7 +24,9 @@ export default function NotFound() {
             <li>• Make sure that all words are spelled correctly.</li>
             <li>• Try different keywords.</li>
             <li>• Try more general keywords.</li>
-            <li>• Check if the block number or hash exists on the blockchain.</li>
+            <li>
+              • Check if the block number or hash exists on the blockchain.
+            </li>
           </ul>
         </div>
 
@@ -46,4 +48,3 @@ export default function NotFound() {
     </div>
   );
 }
-
