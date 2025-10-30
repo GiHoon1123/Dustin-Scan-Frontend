@@ -1,6 +1,7 @@
 import Pagination from "@/components/Pagination";
 import TransactionCard from "@/components/TransactionCard";
 import { getAccount, getTransactionsByAddress } from "@/lib/api";
+import { notFound } from "next/navigation";
 
 export default async function AddressPage({
   params,
@@ -12,12 +13,21 @@ export default async function AddressPage({
   const { address } = await params;
   const searchParamsData = await searchParams;
   const page = Number(searchParamsData.page) || 1;
-  const accountData = await getAccount(address);
-  const account = accountData.data;
 
-  const txsData = await getTransactionsByAddress(address, page, 20);
-  const transactions = txsData.data.items;
-  const pagination = txsData.data.pagination;
+  let account;
+  let transactions;
+  let pagination;
+
+  try {
+    const accountData = await getAccount(address);
+    account = accountData.data;
+
+    const txsData = await getTransactionsByAddress(address, page, 20);
+    transactions = txsData.data.items;
+    pagination = txsData.data.pagination;
+  } catch (error) {
+    notFound();
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

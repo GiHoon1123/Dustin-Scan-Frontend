@@ -1,5 +1,6 @@
 import { getTransactionByHash } from "@/lib/api";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 export default async function TransactionDetailPage({
   params,
@@ -7,8 +8,15 @@ export default async function TransactionDetailPage({
   params: Promise<{ hash: string }>;
 }) {
   const { hash } = await params;
-  const txData = await getTransactionByHash(hash);
-  const tx = txData.data;
+
+  let tx;
+  try {
+    const txData = await getTransactionByHash(hash);
+    tx = txData.data;
+  } catch (error) {
+    notFound();
+  }
+
   const isSuccess = tx.status === 1;
 
   return (

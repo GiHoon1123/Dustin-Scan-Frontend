@@ -18,7 +18,20 @@ export default function SearchBar({ placeholder, type }: SearchBarProps) {
     if (!search.trim()) return;
 
     if (type === "block") {
-      router.push(`/blocks/${search.trim()}`);
+      const input = search.trim();
+      const isHashInput = input.startsWith("0x");
+      
+      // 드롭다운과 입력값이 일치하는지 확인
+      if (searchType === "number" && isHashInput) {
+        alert("Block Number를 선택했지만 Hash 값을 입력하셨습니다. Block Hash로 변경하거나 블록 번호를 입력해주세요.");
+        return;
+      }
+      if (searchType === "hash" && !isHashInput) {
+        alert("Block Hash를 선택했지만 번호를 입력하셨습니다. Block Number로 변경하거나 0x로 시작하는 해시를 입력해주세요.");
+        return;
+      }
+      
+      router.push(`/blocks/${input}`);
     } else {
       router.push(`/transactions/${search.trim()}`);
     }

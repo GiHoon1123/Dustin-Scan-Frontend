@@ -1,5 +1,6 @@
-import { getBlockByNumber } from "@/lib/api";
+import { getBlockByHash, getBlockByNumber } from "@/lib/api";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 export default async function BlockDetailPage({
   params,
@@ -7,8 +8,19 @@ export default async function BlockDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const blockData = await getBlockByNumber(Number(id));
-  const block = blockData.data;
+
+  // 해시인지 블록 번호인지 구분 (0x로 시작하면 해시)
+  const isHash = id.startsWith("0x");
+
+  let block;
+  try {
+    const blockData = isHash
+      ? await getBlockByHash(id)
+      : await getBlockByNumber(Number(id));
+    block = blockData.data;
+  } catch (error) {
+    notFound();
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

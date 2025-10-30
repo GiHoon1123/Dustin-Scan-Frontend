@@ -1,5 +1,4 @@
 import Link from "next/link";
-import DarkModeToggle from "./DarkModeToggle";
 
 export default function Header() {
   return (
@@ -27,7 +26,6 @@ export default function Header() {
             >
               Transactions
             </Link>
-            <DarkModeToggle />
           </nav>
 
           {/* 모바일 메뉴 버튼 (나중에 구현) */}
