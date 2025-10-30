@@ -71,7 +71,8 @@ export default function TransactionCard({ transaction }: TransactionCardProps) {
 
 function getTimeAgo(timestamp: number): string {
   const now = Date.now();
-  const diff = now - timestamp; // 밀리초 차이
+  const timestampMs = timestamp * 1000; // 유닉스 타임스탬프(초)를 밀리초로 변환
+  const diff = now - timestampMs;
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
