@@ -1,5 +1,6 @@
 import BlockCard from "@/components/BlockCard";
 import TransactionCard from "@/components/TransactionCard";
+import UniversalSearchBar from "@/components/UniversalSearchBar";
 import { getBlocks, getTransactions } from "@/lib/api";
 import Link from "next/link";
 
@@ -15,14 +16,17 @@ export default async function HomePage() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* 페이지 제목 */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+      <div className="mb-6 text-center">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
           Dustin Blockchain Explorer
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-gray-600 dark:text-gray-400 mb-6">
           Explore blocks, transactions, and accounts on Dustin Chain
         </p>
       </div>
+
+      {/* 통합 검색창 */}
+      <UniversalSearchBar />
 
       {/* 좌우 분할: 최신 블록 (왼쪽) + 최신 트랜잭션 (오른쪽) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

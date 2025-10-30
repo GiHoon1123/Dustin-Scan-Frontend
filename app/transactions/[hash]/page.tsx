@@ -61,7 +61,7 @@ export default async function TransactionDetailPage({
           <InfoRow label="Nonce" value={tx.nonce.toString()} />
           <InfoRow
             label="Timestamp"
-            value={new Date(Number(tx.timestamp)).toLocaleString()}
+            value={new Date(Number(tx.timestamp) * 1000).toLocaleString()}
           />
           {tx.gasUsed && <InfoRow label="Gas Used" value={tx.gasUsed} />}
           {tx.cumulativeGasUsed && (

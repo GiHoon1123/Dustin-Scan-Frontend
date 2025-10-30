@@ -1,6 +1,10 @@
-import { getBlockByHash, getBlockByNumber } from "@/lib/api";
+import {
+  getBlockByHash,
+  getBlockByNumber,
+  getTransactionByHash,
+} from "@/lib/api";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 export default async function BlockDetailPage({
   params,
@@ -19,6 +23,18 @@ export default async function BlockDetailPage({
       : await getBlockByNumber(Number(id));
     block = blockData.data;
   } catch (error) {
+    // 블록이 없으면, 해시인 경우 트랜잭션으로 확인
+    if (isHash && id.length === 66) {
+      // 0x + 64자 = 해시
+      try {
+        await getTransactionByHash(id);
+        // 트랜잭션이 존재하면 리다이렉트
+        redirect(`/transactions/${id}`);
+      } catch (txError) {
+        // 트랜잭션도 없으면 not found
+        notFound();
+      }
+    }
     notFound();
   }
 
@@ -41,7 +57,7 @@ export default async function BlockDetailPage({
           <InfoRow label="Block Number" value={block.number} />
           <InfoRow
             label="Timestamp"
-            value={new Date(Number(block.timestamp)).toLocaleString()}
+            value={new Date(Number(block.timestamp) * 1000).toLocaleString()}
           />
           <InfoRow
             label="Transactions"
