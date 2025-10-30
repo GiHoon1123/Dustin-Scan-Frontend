@@ -1,0 +1,139 @@
+name: Deploy Frontend to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  EC2_HOST: ec2-user@43.201.96.38
+  DEPLOY_DIR: /home/ec2-user/dustin-scan-frontend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 코드 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Node.js 설정
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      # 3. 의존성 설치
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. 프로덕션 빌드
+      - name: Build for production
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      # 5. SSH 키 설정
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 43.201.96.38 >> ~/.ssh/known_hosts
+
+      # 6. 빌드 파일 및 필요 파일 전송
+      - name: Deploy to EC2
+        run: |
+          # 배포 디렉토리 생성
+          ssh ${{ env.EC2_HOST }} "mkdir -p ${{ env.DEPLOY_DIR }}"
+
+          # 필요한 파일만 전송
+          rsync -avz --delete \
+            --exclude 'node_modules' \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude '.next/cache' \
+            --exclude 'logs' \
+            ./ ${{ env.EC2_HOST }}:${{ env.DEPLOY_DIR }}/
+
+      # 7. EC2에서 애플리케이션 재시작
+      - name: Restart application
+        run: |
+          ssh ${{ env.EC2_HOST }} << 'ENDSSH'
+            cd ${{ env.DEPLOY_DIR }}
+            
+            # Node.js 설치 확인
+            if ! command -v node &> /dev/null; then
+              echo "📦 Node.js 설치 중..."
+              curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+              sudo yum install -y nodejs
+            fi
+            
+            # 프로덕션 의존성 설치
+            npm install --production
+            
+            # 로그 디렉토리 생성
+            mkdir -p logs
+            
+            # 기존 프로세스 종료
+            pkill -f "next start" || true
+            sleep 2
+            
+            # 백그라운드로 실행
+            nohup npm run start:prod > logs/frontend.log 2>&1 &
+            
+            # 프로세스 시작 대기
+            sleep 3
+            
+            # 프로세스 확인
+            if pgrep -f "next start" > /dev/null; then
+              echo "✅ Frontend started successfully"
+              echo "PID: $(pgrep -f 'next start')"
+            else
+              echo "❌ Failed to start frontend"
+              exit 1
+            fi
+          ENDSSH
+
+      # 8. Nginx 설정 업데이트 (최초 1회 또는 설정 변경 시)
+      - name: Update Nginx config
+        run: |
+          # Nginx 설정 파일 전송
+          scp nginx.conf ${{ env.EC2_HOST }}:/tmp/dustin-scan.conf
+
+          # Nginx 설정 적용
+          ssh ${{ env.EC2_HOST }} << 'ENDSSH'
+            # Nginx 설치 확인
+            if ! command -v nginx &> /dev/null; then
+              echo "📦 Nginx 설치 중..."
+              sudo yum install -y nginx
+              sudo systemctl enable nginx
+            fi
+            
+            # 설정 파일 복사
+            sudo mv /tmp/dustin-scan.conf /etc/nginx/conf.d/dustin-scan.conf
+            
+            # Nginx 설정 테스트
+            sudo nginx -t
+            
+            # Nginx 재시작
+            sudo systemctl restart nginx
+            
+            echo "✅ Nginx configured and restarted"
+          ENDSSH
+
+      # 9. 배포 결과 확인
+      - name: Verify deployment
+        run: |
+          echo "=========================================="
+          echo "✅ 배포 완료!"
+          echo "=========================================="
+          echo ""
+          echo "프론트엔드: http://43.201.96.38 (Nginx 80)"
+          echo "직접 접속: http://43.201.96.38:3001 (Next.js)"
+          echo "백엔드 API: http://43.201.96.38:4000"
+          echo ""
+          ssh ${{ env.EC2_HOST }} "ps aux | grep 'next start' | grep -v grep"
+          echo "=========================================="
