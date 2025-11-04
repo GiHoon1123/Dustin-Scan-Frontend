@@ -26,6 +26,12 @@ export default function Header() {
             >
               Transactions
             </Link>
+            <Link
+              href="/contracts"
+              className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
+            >
+              Contracts
+            </Link>
           </nav>
 
           {/* 모바일 메뉴 버튼 (나중에 구현) */}

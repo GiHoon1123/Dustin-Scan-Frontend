@@ -38,6 +38,23 @@ export interface Account {
   txCount: number;
 }
 
+export interface Contract {
+  address: string;
+  deployer: string;
+  transactionHash: string;
+  blockNumber: string;
+  blockHash: string;
+  bytecode: string | null;
+  status: 0 | 1;
+  abi: any[] | null;
+  name: string | null;
+  sourceCode: string | null;
+  compilerVersion: string | null;
+  optimization: boolean | null;
+  timestamp: string;
+  createdAt: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;

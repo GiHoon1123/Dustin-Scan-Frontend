@@ -2,6 +2,7 @@ import {
   Account,
   ApiResponse,
   Block,
+  Contract,
   PaginatedResponse,
   Transaction,
 } from "./types";
@@ -93,5 +94,31 @@ export async function getAccount(
     cache: "no-store",
   });
   if (!res.ok) throw new Error("Failed to fetch account");
+  return res.json();
+}
+
+// 컨트랙트 목록 조회
+export async function getContracts(
+  page = 1,
+  limit = 20
+): Promise<PaginatedResponse<Contract>> {
+  const res = await fetch(
+    `${API_BASE_URL}/contracts?page=${page}&limit=${limit}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!res.ok) throw new Error("Failed to fetch contracts");
+  return res.json();
+}
+
+// 컨트랙트 상세 조회
+export async function getContract(
+  address: string
+): Promise<ApiResponse<Contract>> {
+  const res = await fetch(`${API_BASE_URL}/contracts/${address}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to fetch contract");
   return res.json();
 }
