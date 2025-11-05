@@ -1,5 +1,6 @@
 import ABIUploadForm from "@/components/ABIUploadForm";
 import BytecodeViewer from "@/components/BytecodeViewer";
+import ContractInteraction from "@/components/ContractInteraction";
 import { getContract } from "@/lib/api";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -95,16 +96,24 @@ export default async function ContractDetailPage({
 
       {/* ABI Section */}
       {contract.abi && contract.abi.length > 0 ? (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            ABI (Application Binary Interface)
-          </h2>
-          <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto text-sm">
-            <code className="text-gray-800 dark:text-gray-200">
-              {JSON.stringify(contract.abi, null, 2)}
-            </code>
-          </pre>
-        </div>
+        <>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              ABI (Application Binary Interface)
+            </h2>
+            <pre className="bg-gray-100 dark:bg-gray-900 p-4 rounded-lg overflow-x-auto text-sm">
+              <code className="text-gray-800 dark:text-gray-200">
+                {JSON.stringify(contract.abi, null, 2)}
+              </code>
+            </pre>
+          </div>
+
+          {/* Contract Interaction */}
+          <ContractInteraction
+            contractAddress={contract.address}
+            abi={contract.abi}
+          />
+        </>
       ) : (
         <ABIUploadForm contractAddress={contract.address} />
       )}

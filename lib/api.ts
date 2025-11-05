@@ -122,3 +122,43 @@ export async function getContract(
   if (!res.ok) throw new Error("Failed to fetch contract");
   return res.json();
 }
+
+// 컨트랙트 읽기 메서드 호출 (view, pure)
+export async function callContract(
+  address: string,
+  methodName: string,
+  params: any[]
+): Promise<ApiResponse<{ result: string; gasUsed: string; decodedResult?: any }>> {
+  const res = await fetch(`${API_BASE_URL}/contracts/${address}/call`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ methodName, params }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to call contract");
+  }
+  return res.json();
+}
+
+// 컨트랙트 쓰기 메서드 실행 (nonpayable, payable)
+export async function executeContract(
+  address: string,
+  methodName: string,
+  params: any[]
+): Promise<ApiResponse<{ transactionHash: string; status: string }>> {
+  const res = await fetch(`${API_BASE_URL}/contracts/${address}/execute`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ methodName, params }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to execute contract");
+  }
+  return res.json();
+}

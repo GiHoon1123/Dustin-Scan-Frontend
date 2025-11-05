@@ -1,3 +1,5 @@
+import BlockTransactions from "@/components/BlockTransactions";
+import TransactionCountButton from "@/components/TransactionCountButton";
 import {
   getBlockByHash,
   getBlockByNumber,
@@ -59,10 +61,14 @@ export default async function BlockDetailPage({
             label="Timestamp"
             value={new Date(Number(block.timestamp) * 1000).toLocaleString()}
           />
-          <InfoRow
-            label="Transactions"
-            value={block.transactionCount.toString()}
-          />
+          <div className="flex flex-col sm:flex-row border-b border-gray-200 dark:border-gray-700 pb-3">
+            <div className="text-gray-500 dark:text-gray-400 w-full sm:w-48 mb-1 sm:mb-0">
+              Transactions:
+            </div>
+            <div className="flex-1">
+              <TransactionCountButton count={block.transactionCount} />
+            </div>
+          </div>
           <InfoRow label="State Root" value={block.stateRoot} mono />
           <InfoRow
             label="Transactions Root"
@@ -72,6 +78,13 @@ export default async function BlockDetailPage({
           <InfoRow label="Receipts Root" value={block.receiptsRoot} mono />
         </div>
       </div>
+
+      {/* 트랜잭션 목록 */}
+      {block.transactions && block.transactions.length > 0 && (
+        <div id="block-transactions">
+          <BlockTransactions transactions={block.transactions} />
+        </div>
+      )}
     </div>
   );
 }

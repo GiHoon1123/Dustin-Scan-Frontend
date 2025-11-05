@@ -11,6 +11,7 @@ export interface Block {
   transactionsRoot: string;
   receiptsRoot: string;
   createdAt: string;
+  transactions?: Transaction[]; // 블록 상세 조회 시 포함
 }
 
 export interface Transaction {
