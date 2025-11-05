@@ -1,6 +1,7 @@
 import ABIUploadForm from "@/components/ABIUploadForm";
 import BytecodeViewer from "@/components/BytecodeViewer";
 import ContractInteraction from "@/components/ContractInteraction";
+import ContractLimitationNotice from "@/components/ContractLimitationNotice";
 import { getContract } from "@/lib/api";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -29,6 +30,9 @@ export default async function ContractDetailPage({
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
         {contract.name || "Contract"}
       </h1>
+
+      {/* 제한사항 안내 */}
+      <ContractLimitationNotice />
 
       {/* Status Badge */}
       {contract.status !== undefined && (

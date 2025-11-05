@@ -99,6 +99,14 @@ export default function DeployContractModal({
         </div>
 
         <div className="p-6 overflow-auto flex-1">
+          {/* 경고 배너 */}
+          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              ⚠️ <strong>주의:</strong> 현재는 체인 내부 임의의 계정으로
+              배포됩니다. 메타마스크 연동 전까지 제한이 있습니다.
+            </p>
+          </div>
+
           <form onSubmit={handleDeploy}>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -112,13 +120,16 @@ export default function DeployContractModal({
                 disabled={isDeploying || !!result}
               />
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                컴파일된 컨트랙트 바이트코드를 입력하세요. (0x로 시작하는 hex string)
+                컴파일된 컨트랙트 바이트코드를 입력하세요. (0x로 시작하는 hex
+                string)
               </p>
             </div>
 
             {error && (
               <div className="mb-4 p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 rounded-lg">
-                <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+                <p className="text-sm text-red-800 dark:text-red-200">
+                  {error}
+                </p>
               </div>
             )}
 
@@ -143,8 +154,8 @@ export default function DeployContractModal({
                     Status: {result.status}
                   </p>
                   <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs text-blue-800 dark:text-blue-200">
-                    💡 트랜잭션이 블록에 포함되면 컨트랙트 주소가 생성됩니다. 
-                    몇 초 후 컨트랙트 목록에서 확인할 수 있습니다.
+                    💡 트랜잭션이 블록에 포함되면 컨트랙트 주소가 생성됩니다. 몇
+                    초 후 컨트랙트 목록에서 확인할 수 있습니다.
                   </div>
                 </div>
               </div>
@@ -175,4 +186,3 @@ export default function DeployContractModal({
     </div>
   );
 }
-

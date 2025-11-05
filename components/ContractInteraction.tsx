@@ -22,7 +22,7 @@ interface ABIFunction {
 
 interface ContractInteractionProps {
   contractAddress: string;
-  abi: any[];
+  abi: unknown[];
 }
 
 export default function ContractInteraction({
@@ -33,7 +33,11 @@ export default function ContractInteraction({
 
   // ABI에서 함수만 필터링
   const functions: ABIFunction[] = (abi || []).filter(
-    (item) => item.type === "function"
+    (item): item is ABIFunction =>
+      typeof item === "object" &&
+      item !== null &&
+      "type" in item &&
+      item.type === "function"
   ) as ABIFunction[];
 
   // 읽기/쓰기 함수 분류
@@ -73,6 +77,16 @@ export default function ContractInteraction({
           Write Contract ({writeFunctions.length})
         </button>
       </div>
+
+      {/* Write Contract 경고 배너 */}
+      {selectedTab === "write" && writeFunctions.length > 0 && (
+        <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+            ⚠️ <strong>주의:</strong> 메서드 호출은 임의의 계정으로 실행됩니다.
+            onlyOwner 등 권한 체크가 있는 메서드는 실패할 수 있습니다.
+          </p>
+        </div>
+      )}
 
       {/* 함수 목록 */}
       <div className="space-y-4">
@@ -120,7 +134,12 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
   const [params, setParams] = useState<{ [key: number]: string }>({});
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<{
+    transactionHash?: string;
+    status?: string;
+    result?: string;
+    decodedResult?: unknown;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleParamChange = (index: number, value: string) => {
@@ -173,8 +192,10 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
         );
         setResult(response.data);
       }
-    } catch (err: any) {
-      setError(err.message || "호출 중 오류가 발생했습니다.");
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "호출 중 오류가 발생했습니다."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -187,7 +208,7 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
     return "text";
   };
 
-  const formatResult = (result: any): string => {
+  const formatResult = (result: unknown): string => {
     if (result === null || result === undefined) return "null";
     if (typeof result === "object") {
       return JSON.stringify(result, null, 2);
