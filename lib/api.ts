@@ -127,9 +127,9 @@ export async function getContract(
 export async function callContract(
   address: string,
   methodName: string,
-  params: any[]
+  params: unknown[]
 ): Promise<
-  ApiResponse<{ result: string; gasUsed: string; decodedResult?: any }>
+  ApiResponse<{ result: string; gasUsed: string; decodedResult?: unknown }>
 > {
   const res = await fetch(`${API_BASE_URL}/contracts/${address}/call`, {
     method: "POST",
@@ -149,7 +149,7 @@ export async function callContract(
 export async function executeContract(
   address: string,
   methodName: string,
-  params: any[]
+  params: unknown[]
 ): Promise<ApiResponse<{ transactionHash: string; status: string }>> {
   const res = await fetch(`${API_BASE_URL}/contracts/${address}/execute`, {
     method: "POST",
@@ -161,6 +161,30 @@ export async function executeContract(
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.message || "Failed to execute contract");
+  }
+  return res.json();
+}
+
+// 컨트랙트 배포
+export async function deployContract(
+  bytecode: string
+): Promise<
+  ApiResponse<{
+    transactionHash: string;
+    status: string;
+    contractAddress: string | null;
+  }>
+> {
+  const res = await fetch(`${API_BASE_URL}/contracts/deploy`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ bytecode }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to deploy contract");
   }
   return res.json();
 }

@@ -1,4 +1,5 @@
 import ContractCard from "@/components/ContractCard";
+import ContractsPageHeader from "@/components/ContractsPageHeader";
 import Pagination from "@/components/Pagination";
 import SearchBar from "@/components/SearchBar";
 import { getContracts } from "@/lib/api";
@@ -16,9 +17,7 @@ export default async function ContractsPage({
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-        📜 All Contracts
-      </h1>
+      <ContractsPageHeader />
 
       <SearchBar placeholder="Search by Contract Address..." type="contract" />
 
