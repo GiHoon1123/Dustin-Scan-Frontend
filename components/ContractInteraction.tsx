@@ -41,8 +41,7 @@ export default function ContractInteraction({
     (f) => f.stateMutability === "view" || f.stateMutability === "pure"
   );
   const writeFunctions = functions.filter(
-    (f) =>
-      f.stateMutability === "nonpayable" || f.stateMutability === "payable"
+    (f) => f.stateMutability === "nonpayable" || f.stateMutability === "payable"
   );
 
   return (
@@ -138,7 +137,7 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
       const paramsArray = func.inputs.map((input, index) => {
         const value = params[index] || "";
         const trimmed = value.trim();
-        
+
         // 빈 값 처리
         if (!trimmed) {
           // 숫자 타입은 0으로, bool은 false로, 나머지는 빈 문자열
@@ -150,12 +149,12 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
           }
           return "";
         }
-        
+
         // address 타입은 소문자로 변환 (백엔드에서 처리할 수도 있지만 일관성을 위해)
         if (input.type === "address") {
           return trimmed.toLowerCase();
         }
-        
+
         return trimmed;
       });
 
@@ -234,7 +233,10 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
                       type="checkbox"
                       checked={params[index] === "true"}
                       onChange={(e) =>
-                        handleParamChange(index, e.target.checked ? "true" : "false")
+                        handleParamChange(
+                          index,
+                          e.target.checked ? "true" : "false"
+                        )
                       }
                       className="w-5 h-5"
                     />
@@ -262,11 +264,7 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
                 : "bg-blue-600 hover:bg-blue-700 text-white"
             } disabled:bg-gray-400 disabled:cursor-not-allowed`}
           >
-            {isLoading
-              ? "처리 중..."
-              : isRead
-              ? "Call"
-              : "Write"}
+            {isLoading ? "처리 중..." : isRead ? "Call" : "Write"}
           </button>
 
           {/* 결과 표시 */}
@@ -312,8 +310,8 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
                     </p>
                   </div>
                   <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900 rounded text-xs text-blue-800 dark:text-blue-200">
-                    💡 트랜잭션이 블록에 포함되면 상태가 변경됩니다. 
-                    트랜잭션 해시를 클릭하여 상세 정보를 확인하세요.
+                    💡 트랜잭션이 블록에 포함되면 상태가 변경됩니다. 트랜잭션
+                    해시를 클릭하여 상세 정보를 확인하세요.
                   </div>
                 </div>
               )}
@@ -324,4 +322,3 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
     </div>
   );
 }
-

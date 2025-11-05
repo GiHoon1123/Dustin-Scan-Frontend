@@ -128,7 +128,9 @@ export async function callContract(
   address: string,
   methodName: string,
   params: any[]
-): Promise<ApiResponse<{ result: string; gasUsed: string; decodedResult?: any }>> {
+): Promise<
+  ApiResponse<{ result: string; gasUsed: string; decodedResult?: any }>
+> {
   const res = await fetch(`${API_BASE_URL}/contracts/${address}/call`, {
     method: "POST",
     headers: {

@@ -16,7 +16,9 @@ export default async function ContractDetailPage({
   try {
     const contractData = await getContract(address);
     contract = contractData.data;
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Contract fetch error:", error);
+    console.error("Address:", address);
     notFound();
   }
 

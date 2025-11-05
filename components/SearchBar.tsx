@@ -5,7 +5,7 @@ import { useState } from "react";
 
 interface SearchBarProps {
   placeholder: string;
-  type: "block" | "transaction";
+  type: "block" | "transaction" | "contract";
 }
 
 export default function SearchBar({ placeholder, type }: SearchBarProps) {
@@ -36,8 +36,15 @@ export default function SearchBar({ placeholder, type }: SearchBarProps) {
       }
 
       router.push(`/blocks/${input}`);
-    } else {
+    } else if (type === "transaction") {
       router.push(`/transactions/${search.trim()}`);
+    } else if (type === "contract") {
+      const input = search.trim();
+      if (!input.startsWith("0x")) {
+        alert("컨트랙트 주소는 0x로 시작해야 합니다.");
+        return;
+      }
+      router.push(`/contracts/${input}`);
     }
   };
 
@@ -63,6 +70,8 @@ export default function SearchBar({ placeholder, type }: SearchBarProps) {
               ? searchType === "number"
                 ? "Enter block number..."
                 : "Enter block hash (0x...)..."
+              : type === "contract"
+              ? "Enter contract address (0x...)..."
               : placeholder
           }
           className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
