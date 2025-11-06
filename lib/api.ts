@@ -131,15 +131,33 @@ export async function callContract(
 ): Promise<
   ApiResponse<{ result: string; gasUsed: string; decodedResult?: unknown }>
 > {
-  const res = await fetch(`${API_BASE_URL}/contracts/${address}/call`, {
+  // Next.js API Route 프록시 사용 (Mixed Content 문제 해결)
+  const url = `/api/contracts/${address}/call`;
+  const body = JSON.stringify({ methodName, params });
+
+  console.log("[callContract] Request:", {
+    url,
+    method: "POST",
+    body,
+  });
+
+  const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ methodName, params }),
+    body: body,
   });
+
+  console.log("[callContract] Response:", {
+    status: res.status,
+    statusText: res.statusText,
+    ok: res.ok,
+  });
+
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
+    console.error("[callContract] Error:", errorData);
     throw new Error(errorData.message || "Failed to call contract");
   }
   return res.json();
@@ -151,39 +169,73 @@ export async function executeContract(
   methodName: string,
   params: unknown[]
 ): Promise<ApiResponse<{ transactionHash: string; status: string }>> {
-  const res = await fetch(`${API_BASE_URL}/contracts/${address}/execute`, {
+  // Next.js API Route 프록시 사용 (Mixed Content 문제 해결)
+  const url = `/api/contracts/${address}/execute`;
+  const body = JSON.stringify({ methodName, params });
+
+  console.log("[executeContract] Request:", {
+    url,
+    method: "POST",
+    body,
+  });
+
+  const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ methodName, params }),
+    body: body,
   });
+
+  console.log("[executeContract] Response:", {
+    status: res.status,
+    statusText: res.statusText,
+    ok: res.ok,
+  });
+
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
+    console.error("[executeContract] Error:", errorData);
     throw new Error(errorData.message || "Failed to execute contract");
   }
   return res.json();
 }
 
 // 컨트랙트 배포
-export async function deployContract(
-  bytecode: string
-): Promise<
+export async function deployContract(bytecode: string): Promise<
   ApiResponse<{
     transactionHash: string;
     status: string;
     contractAddress: string | null;
   }>
 > {
-  const res = await fetch(`${API_BASE_URL}/contracts/deploy`, {
+  // Next.js API Route 프록시 사용 (Mixed Content 문제 해결)
+  const url = `/api/contracts/deploy`;
+  const body = JSON.stringify({ bytecode });
+
+  console.log("[deployContract] Request:", {
+    url,
+    method: "POST",
+    bodyLength: body.length,
+  });
+
+  const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ bytecode }),
+    body: body,
   });
+
+  console.log("[deployContract] Response:", {
+    status: res.status,
+    statusText: res.statusText,
+    ok: res.ok,
+  });
+
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
+    console.error("[deployContract] Error:", errorData);
     throw new Error(errorData.message || "Failed to deploy contract");
   }
   return res.json();

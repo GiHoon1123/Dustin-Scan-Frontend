@@ -14,9 +14,6 @@ export default function ABIUploadForm({ contractAddress }: ABIUploadFormProps) {
   const [success, setSuccess] = useState(false);
   const router = useRouter();
 
-  const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
   const formatJSON = (text: string): string => {
     try {
       const parsed = JSON.parse(text.trim());
@@ -67,19 +64,33 @@ export default function ABIUploadForm({ contractAddress }: ABIUploadFormProps) {
     setIsUploading(true);
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/contracts/${contractAddress}/abi`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ abi }),
-        }
-      );
+      // Next.js API Route 프록시 사용 (Mixed Content 문제 해결)
+      const url = `/api/contracts/${contractAddress}/abi`;
+      const body = JSON.stringify({ abi });
+
+      console.log("[ABIUpload] Request:", {
+        url,
+        method: "PUT",
+        body,
+      });
+
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: body,
+      });
+
+      console.log("[ABIUpload] Response:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error("[ABIUpload] Error:", errorData);
         throw new Error(
           errorData.message || `업로드 실패: ${response.statusText}`
         );
