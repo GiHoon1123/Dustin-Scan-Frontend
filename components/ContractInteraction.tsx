@@ -49,16 +49,16 @@ export default function ContractInteraction({
   );
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-6">
+      <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-3 md:mb-4">
         Contract Interaction
       </h2>
 
       {/* 탭 */}
-      <div className="flex space-x-4 mb-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex space-x-2 md:space-x-4 mb-4 md:mb-6 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
         <button
           onClick={() => setSelectedTab("read")}
-          className={`px-4 py-2 font-semibold transition ${
+          className={`px-3 md:px-4 py-2 text-sm md:text-base font-semibold transition whitespace-nowrap min-h-[44px] ${
             selectedTab === "read"
               ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -68,7 +68,7 @@ export default function ContractInteraction({
         </button>
         <button
           onClick={() => setSelectedTab("write")}
-          className={`px-4 py-2 font-semibold transition ${
+          className={`px-3 md:px-4 py-2 text-sm md:text-base font-semibold transition whitespace-nowrap min-h-[44px] ${
             selectedTab === "write"
               ? "text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400"
               : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -217,16 +217,16 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
   };
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 md:p-4">
       <div
         className="flex items-center justify-between cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white">
+        <div className="flex-1 min-w-0 pr-2">
+          <h3 className="text-sm md:text-base font-semibold text-gray-900 dark:text-white break-words">
             {func.name}
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1 break-words">
             {func.inputs.length > 0
               ? func.inputs
                   .map((input) => `${input.name || ""}: ${input.type}`)
@@ -234,19 +234,19 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
               : "No parameters"}
           </p>
         </div>
-        <button className="text-gray-500 dark:text-gray-400">
+        <button className="text-gray-500 dark:text-gray-400 flex-shrink-0 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
           {isExpanded ? "▲" : "▼"}
         </button>
       </div>
 
       {isExpanded && (
-        <div className="mt-4 space-y-4">
+        <div className="mt-3 md:mt-4 space-y-3 md:space-y-4">
           {/* 입력 필드 */}
           {func.inputs.length > 0 && (
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               {func.inputs.map((input, index) => (
                 <div key={index}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {input.name || `param${index}`} ({input.type})
                   </label>
                   {getInputType(input.type) === "checkbox" ? (
@@ -259,7 +259,7 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
                           e.target.checked ? "true" : "false"
                         )
                       }
-                      className="w-5 h-5"
+                      className="w-5 h-5 min-h-[44px] min-w-[44px]"
                     />
                   ) : (
                     <input
@@ -267,7 +267,7 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
                       value={params[index] || ""}
                       onChange={(e) => handleParamChange(index, e.target.value)}
                       placeholder={`Enter ${input.type}`}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
                     />
                   )}
                 </div>
@@ -279,7 +279,7 @@ function FunctionCard({ func, contractAddress, isRead }: FunctionCardProps) {
           <button
             onClick={handleCall}
             disabled={isLoading}
-            className={`w-full px-4 py-2 rounded-lg font-semibold transition ${
+            className={`w-full px-4 py-2 text-sm md:text-base rounded-lg font-semibold transition min-h-[44px] ${
               isRead
                 ? "bg-green-600 hover:bg-green-700 text-white"
                 : "bg-blue-600 hover:bg-blue-700 text-white"

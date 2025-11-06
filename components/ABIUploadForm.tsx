@@ -67,13 +67,16 @@ export default function ABIUploadForm({ contractAddress }: ABIUploadFormProps) {
     setIsUploading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/contracts/${contractAddress}/abi`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ abi }),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/contracts/${contractAddress}/abi`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ abi }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -95,25 +98,27 @@ export default function ABIUploadForm({ contractAddress }: ABIUploadFormProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-6">
+      <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-3 md:mb-4">
         ABI 업로드
       </h2>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+      <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-3 md:mb-4">
         컨트랙트 ABI를 JSON 형식으로 붙여넣어 업로드하세요.
       </p>
 
       {success && (
-        <div className="mb-4 p-4 bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 rounded-lg">
-          <p className="text-green-800 dark:text-green-200">
+        <div className="mb-3 md:mb-4 p-3 md:p-4 bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 rounded-lg">
+          <p className="text-xs md:text-sm text-green-800 dark:text-green-200">
             ✓ ABI가 성공적으로 업로드되었습니다!
           </p>
         </div>
       )}
 
       {error && (
-        <div className="mb-4 p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 rounded-lg">
-          <p className="text-red-800 dark:text-red-200">{error}</p>
+        <div className="mb-3 md:mb-4 p-3 md:p-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 rounded-lg">
+          <p className="text-xs md:text-sm text-red-800 dark:text-red-200">
+            {error}
+          </p>
         </div>
       )}
 
@@ -132,22 +137,22 @@ export default function ABIUploadForm({ contractAddress }: ABIUploadFormProps) {
     "stateMutability": "view"
   }
 ]`}
-          className="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full h-48 md:h-64 p-3 md:p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           disabled={isUploading}
         />
-        <div className="mt-4 flex justify-between items-center">
+        <div className="mt-3 md:mt-4 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
           <button
             type="button"
             onClick={handleFormat}
             disabled={isUploading || !abiText.trim()}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-gray-800 dark:text-gray-200 rounded-lg transition text-sm"
+            className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-gray-800 dark:text-gray-200 rounded-lg transition w-full sm:w-auto min-h-[44px]"
           >
             포맷팅
           </button>
           <button
             type="submit"
             disabled={isUploading || !abiText.trim()}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition font-semibold"
+            className="px-4 md:px-6 py-2 text-sm md:text-base bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition font-semibold w-full sm:w-auto min-h-[44px]"
           >
             {isUploading ? "업로드 중..." : "ABI 업로드"}
           </button>
@@ -156,4 +161,3 @@ export default function ABIUploadForm({ contractAddress }: ABIUploadFormProps) {
     </div>
   );
 }
-

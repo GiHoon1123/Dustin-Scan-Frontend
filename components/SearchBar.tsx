@@ -50,12 +50,12 @@ export default function SearchBar({ placeholder, type }: SearchBarProps) {
 
   return (
     <form onSubmit={handleSearch} className="mb-6">
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         {type === "block" && (
           <select
             value={searchType}
             onChange={(e) => setSearchType(e.target.value as "number" | "hash")}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
           >
             <option value="number">Block Number</option>
             <option value="hash">Block Hash</option>
@@ -74,11 +74,11 @@ export default function SearchBar({ placeholder, type }: SearchBarProps) {
               ? "Enter contract address (0x...)..."
               : placeholder
           }
-          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[44px]"
         />
         <button
           type="submit"
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold"
+          className="px-4 md:px-6 py-2 text-sm md:text-base bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold min-h-[44px]"
         >
           Search
         </button>

@@ -2,6 +2,7 @@
 
 import { Contract } from "@/lib/types";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface ContractCardProps {
   contract: Contract;
@@ -10,14 +11,25 @@ interface ContractCardProps {
 export default function ContractCard({ contract }: ContractCardProps) {
   const timeAgo = getTimeAgo(Number(contract.timestamp));
   const isDeployed = contract.status === 1;
+  const router = useRouter();
+
+  const handleDeployerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/address/${contract.deployer}`);
+  };
+
+  const handleBlockClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/blocks/${contract.blockNumber}`);
+  };
 
   return (
     <Link
       href={`/contracts/${contract.address}`}
-      className="block p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-lg transition"
+      className="block p-3 md:p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-lg transition"
     >
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
+        <div className="text-base md:text-lg font-semibold text-blue-600 dark:text-blue-400">
           {contract.name || "Contract"}
         </div>
         <div className="flex items-center space-x-2">
@@ -32,41 +44,41 @@ export default function ContractCard({ contract }: ContractCardProps) {
               {isDeployed ? "Deployed" : "Failed"}
             </span>
           )}
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
             {timeAgo}
           </div>
         </div>
       </div>
-      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
-        <div className="flex items-center">
-          <span className="text-gray-500 dark:text-gray-400 w-24">
+      <div className="space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-300">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
+          <span className="text-gray-500 dark:text-gray-400 w-20 sm:w-24">
             Address:
           </span>
-          <span className="font-mono truncate">
+          <span className="font-mono break-all sm:truncate">
             {contract.address.slice(0, 12)}...
           </span>
         </div>
-        <div className="flex items-center">
-          <span className="text-gray-500 dark:text-gray-400 w-24">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
+          <span className="text-gray-500 dark:text-gray-400 w-20 sm:w-24">
             Deployer:
           </span>
-          <Link
-            href={`/address/${contract.deployer}`}
-            onClick={(e) => e.stopPropagation()}
-            className="font-mono truncate hover:text-blue-600 dark:hover:text-blue-400"
+          <span
+            onClick={handleDeployerClick}
+            className="font-mono break-all sm:truncate hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
           >
             {contract.deployer.slice(0, 12)}...
-          </Link>
+          </span>
         </div>
-        <div className="flex items-center">
-          <span className="text-gray-500 dark:text-gray-400 w-24">Block:</span>
-          <Link
-            href={`/blocks/${contract.blockNumber}`}
-            onClick={(e) => e.stopPropagation()}
-            className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
+          <span className="text-gray-500 dark:text-gray-400 w-20 sm:w-24">
+            Block:
+          </span>
+          <span
+            onClick={handleBlockClick}
+            className="font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
           >
             #{contract.blockNumber}
-          </Link>
+          </span>
         </div>
       </div>
     </Link>

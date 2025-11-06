@@ -2,6 +2,7 @@
 
 import { Transaction } from "@/lib/types";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -10,14 +11,20 @@ interface TransactionCardProps {
 export default function TransactionCard({ transaction }: TransactionCardProps) {
   const timeAgo = getTimeAgo(Number(transaction.timestamp));
   const isSuccess = transaction.status === 1;
+  const router = useRouter();
+
+  const handleAddressClick = (e: React.MouseEvent, address: string) => {
+    e.stopPropagation();
+    router.push(`/address/${address}`);
+  };
 
   return (
     <Link
       href={`/transactions/${transaction.hash}`}
-      className="block p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-lg transition"
+      className="block p-3 md:p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-lg transition"
     >
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-sm font-mono text-blue-600 dark:text-blue-400 truncate">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
+        <div className="text-xs md:text-sm font-mono text-blue-600 dark:text-blue-400 break-all sm:truncate">
           {transaction.hash.slice(0, 20)}...
         </div>
         <div className="flex items-center space-x-2">
@@ -32,33 +39,31 @@ export default function TransactionCard({ transaction }: TransactionCardProps) {
               {isSuccess ? "Success" : "Failed"}
             </span>
           )}
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
             {timeAgo}
           </div>
         </div>
       </div>
-      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
-        <div className="flex items-center">
+      <div className="space-y-1 text-xs md:text-sm text-gray-600 dark:text-gray-300">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
           <span className="text-gray-500 dark:text-gray-400 w-16">From:</span>
-          <Link
-            href={`/address/${transaction.from}`}
-            onClick={(e) => e.stopPropagation()}
-            className="font-mono truncate hover:text-blue-600 dark:hover:text-blue-400"
+          <span
+            onClick={(e) => handleAddressClick(e, transaction.from)}
+            className="font-mono break-all sm:truncate hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
           >
             {transaction.from}
-          </Link>
+          </span>
         </div>
-        <div className="flex items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
           <span className="text-gray-500 dark:text-gray-400 w-16">To:</span>
-          <Link
-            href={`/address/${transaction.to}`}
-            onClick={(e) => e.stopPropagation()}
-            className="font-mono truncate hover:text-blue-600 dark:hover:text-blue-400"
+          <span
+            onClick={(e) => handleAddressClick(e, transaction.to)}
+            className="font-mono break-all sm:truncate hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
           >
             {transaction.to}
-          </Link>
+          </span>
         </div>
-        <div className="flex items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
           <span className="text-gray-500 dark:text-gray-400 w-16">Value:</span>
           <span className="font-semibold text-green-600 dark:text-green-400">
             {transaction.value} DSTN

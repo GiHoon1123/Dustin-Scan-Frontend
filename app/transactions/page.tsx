@@ -15,8 +15,8 @@ export default async function TransactionsPage({
   const pagination = txsData.data.pagination;
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+    <div className="container mx-auto px-4 py-4 md:py-8">
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6">
         💸 All Transactions
       </h1>
 
@@ -25,13 +25,13 @@ export default async function TransactionsPage({
         type="transaction"
       />
 
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
-        <div className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
+        <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
           Total {pagination.totalCount} transactions
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {transactions.map((tx) => (
           <TransactionCard key={tx.hash} transaction={tx} />
         ))}

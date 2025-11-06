@@ -41,12 +41,12 @@ export default async function BlockDetailPage({
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+    <div className="container mx-auto px-4 py-4 md:py-8">
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6">
         Block #{block.number}
       </h1>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-6">
         <div className="space-y-4">
           <InfoRow label="Block Hash" value={block.hash} mono />
           <InfoRow label="Parent Hash" value={block.parentHash} mono />
@@ -102,12 +102,12 @@ function InfoRow({
 }) {
   return (
     <div className="flex flex-col sm:flex-row border-b border-gray-200 dark:border-gray-700 pb-3">
-      <div className="text-gray-500 dark:text-gray-400 w-full sm:w-48 mb-1 sm:mb-0">
+      <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 w-full sm:w-48 mb-1 sm:mb-0">
         {label}:
       </div>
       <div
         className={`flex-1 ${
-          mono ? "font-mono text-sm" : ""
+          mono ? "font-mono text-xs md:text-sm" : "text-sm md:text-base"
         } break-all text-gray-900 dark:text-white`}
       >
         {link ? (

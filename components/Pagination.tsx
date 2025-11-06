@@ -25,12 +25,12 @@ export default function Pagination({
   }
 
   return (
-    <div className="flex items-center justify-center space-x-2 mt-8">
+    <div className="flex items-center justify-center flex-wrap gap-2 mt-6 md:mt-8">
       {/* Previous */}
       {currentPage > 1 && (
         <Link
           href={`${basePath}?page=${currentPage - 1}`}
-          className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+          className="px-3 md:px-4 py-2 text-sm md:text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition min-h-[44px] flex items-center justify-center"
         >
           ← Prev
         </Link>
@@ -41,7 +41,7 @@ export default function Pagination({
         <Link
           key={page}
           href={`${basePath}?page=${page}`}
-          className={`px-4 py-2 rounded-lg transition ${
+          className={`px-3 md:px-4 py-2 text-sm md:text-base rounded-lg transition min-h-[44px] min-w-[44px] flex items-center justify-center ${
             page === currentPage
               ? "bg-blue-600 text-white"
               : "bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -55,7 +55,7 @@ export default function Pagination({
       {currentPage < totalPages && (
         <Link
           href={`${basePath}?page=${currentPage + 1}`}
-          className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+          className="px-3 md:px-4 py-2 text-sm md:text-base bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition min-h-[44px] flex items-center justify-center"
         >
           Next →
         </Link>

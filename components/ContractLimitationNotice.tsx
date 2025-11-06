@@ -6,26 +6,26 @@ export default function ContractLimitationNotice() {
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (
-    <div className="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-6">
+    <div className="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
       <div
         className="flex items-center justify-between cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center space-x-2">
-          <span className="text-yellow-600 dark:text-yellow-400 text-xl">
+        <div className="flex items-center space-x-2 flex-1 min-w-0 pr-2">
+          <span className="text-yellow-600 dark:text-yellow-400 text-lg md:text-xl flex-shrink-0">
             ⚠️
           </span>
-          <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-200">
+          <h3 className="text-xs md:text-sm font-semibold text-yellow-800 dark:text-yellow-200 break-words">
             현재 컨트랙트 기능은 제한적입니다
           </h3>
         </div>
-        <button className="text-yellow-600 dark:text-yellow-400">
+        <button className="text-yellow-600 dark:text-yellow-400 flex-shrink-0 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
           {isExpanded ? "▲" : "▼"}
         </button>
       </div>
 
       {isExpanded && (
-        <div className="mt-3 space-y-2 text-sm text-yellow-800 dark:text-yellow-200">
+        <div className="mt-3 space-y-2 text-xs md:text-sm text-yellow-800 dark:text-yellow-200">
           <p>
             • <strong>배포 및 메서드 호출</strong>은 체인 내부 임의의 계정으로
             실행됩니다.

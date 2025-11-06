@@ -30,13 +30,13 @@ export default async function AddressPage({
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
+    <div className="container mx-auto px-4 py-4 md:py-8">
+      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6">
         Address Details
       </h1>
 
       {/* Account Info */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-8">
         <div className="space-y-4">
           <InfoRow label="Address" value={account.address} mono />
           <InfoRow label="Balance" value={`${account.balance} DSTN`} />
@@ -50,17 +50,17 @@ export default async function AddressPage({
       </div>
 
       {/* Transactions List */}
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+      <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3 md:mb-4">
         Transactions
       </h2>
 
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
-        <div className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
+        <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
           Total {pagination.totalCount} transactions
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {transactions.map((tx) => (
           <TransactionCard key={tx.hash} transaction={tx} />
         ))}
@@ -86,12 +86,12 @@ function InfoRow({
 }) {
   return (
     <div className="flex flex-col sm:flex-row border-b border-gray-200 dark:border-gray-700 pb-3">
-      <div className="text-gray-500 dark:text-gray-400 w-full sm:w-48 mb-1 sm:mb-0">
+      <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 w-full sm:w-48 mb-1 sm:mb-0">
         {label}:
       </div>
       <div
         className={`flex-1 ${
-          mono ? "font-mono text-sm" : ""
+          mono ? "font-mono text-xs md:text-sm" : "text-sm md:text-base"
         } break-all text-gray-900 dark:text-white`}
       >
         {value}

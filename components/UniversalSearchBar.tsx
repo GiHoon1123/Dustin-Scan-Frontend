@@ -132,7 +132,7 @@ export default function UniversalSearchBar() {
   };
 
   return (
-    <form onSubmit={handleSearch} className="mb-8">
+    <form onSubmit={handleSearch} className="mb-6 md:mb-8">
       <div className="max-w-3xl mx-auto">
         <div className="relative">
           <input
@@ -140,19 +140,22 @@ export default function UniversalSearchBar() {
             value={search}
             onChange={handleInputChange}
             placeholder="Search by Block Number / Hash / Transaction Hash / Address / Contract"
-            className="w-full px-6 py-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            className="w-full px-4 md:px-6 py-3 md:py-4 text-base md:text-lg border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition pr-24 md:pr-32"
             disabled={isSearching}
           />
           <button
             type="submit"
             disabled={isSearching}
-            className="absolute right-2 top-1/2 -translate-y-1/2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition font-semibold"
+            className="absolute right-2 top-1/2 -translate-y-1/2 px-3 md:px-6 py-2 text-sm md:text-base bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition font-semibold min-h-[44px]"
           >
-            {isSearching ? "⏳" : "🔍"} Search
+            <span className="hidden md:inline">
+              {isSearching ? "⏳" : "🔍"} Search
+            </span>
+            <span className="md:hidden">{isSearching ? "⏳" : "🔍"}</span>
           </button>
         </div>
         {/* 힌트를 고정 높이로 만들어서 레이아웃 shift 방지 */}
-        <div className="h-6 mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+        <div className="h-6 mt-2 text-xs md:text-sm text-gray-600 dark:text-gray-400 text-center">
           {hint}
         </div>
       </div>

@@ -67,20 +67,21 @@ export default function DeployContractModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-0 md:p-4"
       onClick={handleClose}
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col"
+        className="bg-white dark:bg-gray-800 rounded-none md:rounded-lg shadow-xl max-w-2xl w-full h-full md:h-auto md:max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-white">
             Deploy Contract
           </h2>
           <button
             onClick={handleClose}
-            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition p-2 min-h-[44px] min-w-[44px]"
+            aria-label="닫기"
           >
             <svg
               className="w-6 h-6"
@@ -98,7 +99,7 @@ export default function DeployContractModal({
           </button>
         </div>
 
-        <div className="p-6 overflow-auto flex-1">
+        <div className="p-4 md:p-6 overflow-auto flex-1">
           {/* 경고 배너 */}
           <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg">
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
@@ -116,7 +117,7 @@ export default function DeployContractModal({
                 value={bytecode}
                 onChange={(e) => setBytecode(e.target.value)}
                 placeholder="0x608060405234801561000f575f5ffd5b..."
-                className="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-48 md:h-64 p-3 md:p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={isDeploying || !!result}
               />
               <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -161,12 +162,12 @@ export default function DeployContractModal({
               </div>
             )}
 
-            <div className="flex justify-end space-x-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={handleClose}
                 disabled={isDeploying}
-                className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50"
+                className="px-4 md:px-6 py-2 text-sm md:text-base border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition disabled:opacity-50 min-h-[44px]"
               >
                 {result ? "닫기" : "취소"}
               </button>
@@ -174,7 +175,7 @@ export default function DeployContractModal({
                 <button
                   type="submit"
                   disabled={isDeploying || !bytecode.trim()}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition font-semibold"
+                  className="px-4 md:px-6 py-2 text-sm md:text-base bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition font-semibold min-h-[44px]"
                 >
                   {isDeploying ? "배포 중..." : "Deploy"}
                 </button>

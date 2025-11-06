@@ -16,18 +16,18 @@ export default async function ContractsPage({
   const pagination = contractsData.data.pagination;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-4 md:py-8">
       <ContractsPageHeader />
 
       <SearchBar placeholder="Search by Contract Address..." type="contract" />
 
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-6">
-        <div className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
+        <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
           Total {pagination.totalCount} contracts
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 md:space-y-4">
         {contracts.map((contract) => (
           <ContractCard key={contract.address} contract={contract} />
         ))}
@@ -41,4 +41,3 @@ export default async function ContractsPage({
     </div>
   );
 }
-
