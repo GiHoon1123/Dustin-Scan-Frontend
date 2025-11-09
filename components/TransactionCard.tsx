@@ -15,6 +15,7 @@ export default function TransactionCard({ transaction }: TransactionCardProps) {
 
   const handleAddressClick = (e: React.MouseEvent, address: string) => {
     e.stopPropagation();
+    e.preventDefault();
     router.push(`/address/${address}`);
   };
 
