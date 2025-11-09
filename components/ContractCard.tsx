@@ -25,12 +25,6 @@ export default function ContractCard({ contract }: ContractCardProps) {
     router.push(`/blocks/${contract.blockNumber}`);
   };
 
-  const handleContractAddressClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    router.push(`/address/${contract.address}`);
-  };
-
   return (
     <Link
       href={`/contracts/${contract.address}`}
@@ -62,10 +56,7 @@ export default function ContractCard({ contract }: ContractCardProps) {
           <span className="text-gray-500 dark:text-gray-400 w-20 sm:w-24">
             Address:
           </span>
-          <span
-            onClick={handleContractAddressClick}
-            className="font-mono break-all sm:truncate hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
-          >
+          <span className="font-mono break-all sm:truncate">
             {contract.address.slice(0, 12)}...
           </span>
         </div>

@@ -51,7 +51,12 @@ export default async function ContractDetailPage({
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-6">
         <div className="space-y-4">
-          <InfoRow label="Contract Address" value={contract.address} mono />
+          <InfoRow
+            label="Contract Address"
+            value={contract.address}
+            mono
+            link={`/address/${contract.address}`}
+          />
           <InfoRow
             label="Deployer"
             value={contract.deployer}
