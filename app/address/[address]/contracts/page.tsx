@@ -50,7 +50,7 @@ export default async function AddressContractsPage({
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4 md:mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-            📄 Deployed Contracts
+            📜 Deployed Contracts
           </h1>
           <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
             Address: <span className="font-mono text-xs md:text-sm break-all">{address}</span>
