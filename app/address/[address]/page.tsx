@@ -1,11 +1,11 @@
 import ContractCard from "@/components/ContractCard";
 import TransactionCard from "@/components/TransactionCard";
-import { getAccount, getTransactionsByAddress } from "@/lib/api";
 import {
-  buildFallbackContract,
-  fetchContractDetailMap,
-} from "@/lib/contractHelpers";
-import { DeployedContractSummary } from "@/lib/types";
+  getAccount,
+  getContractsByDeployer,
+  getTransactionsByAddress,
+} from "@/lib/api";
+import { Contract } from "@/lib/types";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -19,6 +19,15 @@ export default async function AddressPage({
   let account;
   let transactions;
   let pagination;
+  let contractPreview: Contract[] = [];
+  let contractPreviewPagination = {
+    currentPage: 1,
+    pageSize: 10,
+    totalCount: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrevious: false,
+  };
 
   try {
     const accountData = await getAccount(address);
@@ -32,45 +41,16 @@ export default async function AddressPage({
     notFound();
   }
 
-  const normalizedAddress = address.toLowerCase();
-  const deployedContractsMap = new Map<string, DeployedContractSummary>();
-
-  transactions.forEach((tx) => {
-    const contractAddress = tx.contractAddress;
-    if (!contractAddress) return;
-
-    if (tx.from.toLowerCase() !== normalizedAddress) return;
-
-    const key = contractAddress.toLowerCase();
-    if (deployedContractsMap.has(key)) return;
-
-    deployedContractsMap.set(key, {
-      contractAddress,
-      transactionHash: tx.hash,
-      blockNumber: tx.blockNumber,
-      blockHash: tx.blockHash,
-      timestamp: tx.timestamp,
-      status: tx.status,
-      deployerAddress: address,
-    });
-  });
-
-  const deployedContractSummaries = Array.from(
-    deployedContractsMap.values()
-  ).sort((a, b) => Number(b.blockNumber) - Number(a.blockNumber));
-
-  const topContractSummaries = deployedContractSummaries.slice(0, 10);
-  const contractDetailsMap = await fetchContractDetailMap(
-    topContractSummaries.map((summary) => summary.contractAddress)
-  );
-  const deployedContracts = topContractSummaries.map((summary) => {
-    const detail = contractDetailsMap.get(
-      summary.contractAddress.toLowerCase()
-    );
-    return detail || buildFallbackContract(summary, address);
-  });
+  try {
+    const contractsData = await getContractsByDeployer(address, 1, 10);
+    contractPreview = contractsData.data.items;
+    contractPreviewPagination = contractsData.data.pagination;
+  } catch (error) {
+    console.error("Contract preview fetch error:", error);
+  }
 
   const transactionsToDisplay = transactions.slice(0, 10);
+  const totalContracts = contractPreviewPagination.totalCount ?? 0;
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
@@ -100,29 +80,29 @@ export default async function AddressPage({
             </h2>
             <div className="flex items-center gap-3">
               <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                Total {deployedContractsMap.size}
+                Total {totalContracts}
               </div>
               <Link
                 href={`/address/${address}/contracts`}
                 className={`text-xs md:text-sm hover:underline ${
-                  deployedContractsMap.size > 0
+                  totalContracts > 0
                     ? "text-blue-600 dark:text-blue-400"
                     : "text-gray-400 dark:text-gray-600 cursor-not-allowed"
                 }`}
-                aria-disabled={deployedContractsMap.size === 0}
+                aria-disabled={totalContracts === 0}
               >
                 VIEW ALL →
               </Link>
             </div>
           </div>
 
-          {topContractSummaries.length === 0 ? (
+          {contractPreview.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300">
               이 주소가 배포한 컨트랙트가 없습니다.
             </div>
           ) : (
             <div className="space-y-3 md:space-y-4">
-              {deployedContracts.map((contract) => (
+              {contractPreview.map((contract) => (
                 <ContractCard key={contract.address} contract={contract} />
               ))}
             </div>

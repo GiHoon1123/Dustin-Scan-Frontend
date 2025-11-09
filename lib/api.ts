@@ -123,6 +123,21 @@ export async function getContract(
   return res.json();
 }
 
+export async function getContractsByDeployer(
+  address: string,
+  page = 1,
+  limit = 20
+): Promise<PaginatedResponse<Contract>> {
+  const res = await fetch(
+    `${API_BASE_URL}/contracts/deployer/${address}?page=${page}&limit=${limit}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!res.ok) throw new Error("Failed to fetch contracts by deployer");
+  return res.json();
+}
+
 // 컨트랙트 읽기 메서드 호출 (view, pure)
 export async function callContract(
   address: string,

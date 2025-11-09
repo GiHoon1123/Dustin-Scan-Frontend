@@ -1,16 +1,13 @@
 import ContractCard from "@/components/ContractCard";
 import Pagination from "@/components/Pagination";
-import { getAccount, getTransactionsByAddress } from "@/lib/api";
-import { DeployedContractSummary } from "@/lib/types";
 import {
-  buildFallbackContract,
-  fetchContractDetailMap,
-} from "@/lib/contractHelpers";
+  getAccount,
+  getContractsByDeployer,
+} from "@/lib/api";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 const CONTRACTS_PER_PAGE = 20;
-const TRANSACTIONS_FETCH_LIMIT = 100;
 
 export default async function AddressContractsPage({
   params,
@@ -30,20 +27,29 @@ export default async function AddressContractsPage({
     notFound();
   }
 
-  const deployedContracts = await fetchDeployedContracts(address);
-  const totalCount = deployedContracts.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / CONTRACTS_PER_PAGE));
-  const currentPage = Math.min(page, totalPages);
+  let contracts;
+  let pagination;
 
-  const start = (currentPage - 1) * CONTRACTS_PER_PAGE;
-  const items = deployedContracts.slice(start, start + CONTRACTS_PER_PAGE);
-  const contractsDetailMap = await fetchContractDetailMap(
-    items.map((summary) => summary.contractAddress)
-  );
-  const contractsToRender = items.map((summary) => {
-    const detail = contractsDetailMap.get(summary.contractAddress.toLowerCase());
-    return detail || buildFallbackContract(summary, address);
-  });
+  try {
+    const contractsData = await getContractsByDeployer(
+      address,
+      page,
+      CONTRACTS_PER_PAGE
+    );
+    contracts = contractsData.data.items;
+    pagination = contractsData.data.pagination;
+  } catch (error) {
+    console.error("Contracts fetch error:", error);
+    contracts = [];
+    pagination = {
+      currentPage: 1,
+      pageSize: CONTRACTS_PER_PAGE,
+      totalCount: 0,
+      totalPages: 1,
+      hasNext: false,
+      hasPrevious: false,
+    };
+  }
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
@@ -66,80 +72,29 @@ export default async function AddressContractsPage({
 
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
         <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
-          Showing {items.length} of {totalCount} deployed contracts
+          Showing {contracts.length} of {pagination.totalCount} deployed contracts
         </div>
       </div>
 
-      {contractsToRender.length === 0 ? (
+      {contracts.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300">
           이 주소가 배포한 컨트랙트가 없습니다.
         </div>
       ) : (
         <div className="space-y-3 md:space-y-4">
-          {contractsToRender.map((contract) => (
+          {contracts.map((contract) => (
             <ContractCard key={contract.address} contract={contract} />
           ))}
         </div>
       )}
 
-      {totalPages > 1 && (
+      {pagination.totalPages > 1 && (
         <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
           basePath={`/address/${address}/contracts`}
         />
       )}
     </div>
-  );
-}
-
-async function fetchDeployedContracts(
-  address: string
-): Promise<DeployedContractSummary[]> {
-  const normalizedAddress = address.toLowerCase();
-  const contractsMap = new Map<string, DeployedContractSummary>();
-
-  let page = 1;
-  let hasNext = true;
-
-  while (hasNext && page <= 50) {
-    let txsData;
-    try {
-      txsData = await getTransactionsByAddress(
-        address,
-        page,
-        TRANSACTIONS_FETCH_LIMIT
-      );
-    } catch (error) {
-      console.error("fetchDeployedContracts error:", error);
-      break;
-    }
-
-    const { items, pagination } = txsData.data;
-
-    items.forEach((tx) => {
-      if (!tx.contractAddress) return;
-      if (tx.from.toLowerCase() !== normalizedAddress) return;
-
-      const key = tx.contractAddress.toLowerCase();
-      if (contractsMap.has(key)) return;
-
-      contractsMap.set(key, {
-        contractAddress: tx.contractAddress,
-        transactionHash: tx.hash,
-        blockNumber: tx.blockNumber,
-        blockHash: tx.blockHash,
-        timestamp: tx.timestamp,
-        status: tx.status,
-        deployerAddress: address,
-      });
-    });
-
-    hasNext = pagination.hasNext;
-    page += 1;
-  }
-
-  return Array.from(contractsMap.values()).sort(
-    (a, b) => Number(b.blockNumber) - Number(a.blockNumber)
   );
 }
