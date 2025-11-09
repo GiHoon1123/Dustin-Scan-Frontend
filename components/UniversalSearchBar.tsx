@@ -64,6 +64,10 @@ export default function UniversalSearchBar() {
 
     const trimmed = search.trim();
     const type = detectInputType(trimmed);
+    const normalized =
+      type === "address" || type === "hash"
+        ? trimmed.toLowerCase()
+        : trimmed;
 
     if (!type) {
       router.push("/not-found");
@@ -80,41 +84,51 @@ export default function UniversalSearchBar() {
         case "address":
           // 먼저 컨트랙트인지 확인
           const contractRes = await fetch(
-            `${API_BASE_URL}/contracts/${trimmed}`,
+            `${API_BASE_URL}/contracts/${normalized}`,
             {
               cache: "no-store",
             }
           );
 
           if (contractRes.ok) {
-            router.push(`/contracts/${trimmed}`);
+            router.push(`/contracts/${normalized}`);
           } else {
-            // 컨트랙트가 아니면 계정으로 이동
-            router.push(`/address/${trimmed}`);
+            const accountRes = await fetch(
+              `${API_BASE_URL}/accounts/${normalized}`,
+              {
+                cache: "no-store",
+              }
+            );
+
+            if (accountRes.ok) {
+              router.push(`/address/${normalized}`);
+            } else {
+              router.push("/not-found");
+            }
           }
           break;
         case "hash":
           // 클라이언트에서 순차 조회: 블록 해시 → 트랜잭션 해시
           const blockRes = await fetch(
-            `${API_BASE_URL}/blocks/hash/${trimmed}`,
+            `${API_BASE_URL}/blocks/hash/${normalized}`,
             {
               cache: "no-store",
             }
           );
 
           if (blockRes.ok) {
-            router.push(`/blocks/${trimmed}`);
+            router.push(`/blocks/${normalized}`);
           } else {
             // 블록이 아니면 트랜잭션 확인
             const txRes = await fetch(
-              `${API_BASE_URL}/transactions/${trimmed}`,
+              `${API_BASE_URL}/transactions/${normalized}`,
               {
                 cache: "no-store",
               }
             );
 
             if (txRes.ok) {
-              router.push(`/transactions/${trimmed}`);
+              router.push(`/transactions/${normalized}`);
             } else {
               router.push("/not-found");
             }
