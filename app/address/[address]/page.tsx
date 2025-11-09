@@ -1,18 +1,20 @@
-import Pagination from "@/components/Pagination";
+import ContractCard from "@/components/ContractCard";
 import TransactionCard from "@/components/TransactionCard";
 import { getAccount, getTransactionsByAddress } from "@/lib/api";
+import {
+  buildFallbackContract,
+  fetchContractDetailMap,
+} from "@/lib/contractHelpers";
+import { DeployedContractSummary } from "@/lib/types";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export default async function AddressPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ address: string }>;
-  searchParams: Promise<{ page?: string }>;
 }) {
   const { address } = await params;
-  const searchParamsData = await searchParams;
-  const page = Number(searchParamsData.page) || 1;
 
   let account;
   let transactions;
@@ -22,12 +24,53 @@ export default async function AddressPage({
     const accountData = await getAccount(address);
     account = accountData.data;
 
-    const txsData = await getTransactionsByAddress(address, page, 20);
+    const txsData = await getTransactionsByAddress(address, 1, 50);
     transactions = txsData.data.items;
     pagination = txsData.data.pagination;
   } catch (error) {
+    console.error("Address page fetch error:", error);
     notFound();
   }
+
+  const normalizedAddress = address.toLowerCase();
+  const deployedContractsMap = new Map<string, DeployedContractSummary>();
+
+  transactions.forEach((tx) => {
+    const contractAddress = tx.contractAddress;
+    if (!contractAddress) return;
+
+    if (tx.from.toLowerCase() !== normalizedAddress) return;
+
+    const key = contractAddress.toLowerCase();
+    if (deployedContractsMap.has(key)) return;
+
+    deployedContractsMap.set(key, {
+      contractAddress,
+      transactionHash: tx.hash,
+      blockNumber: tx.blockNumber,
+      blockHash: tx.blockHash,
+      timestamp: tx.timestamp,
+      status: tx.status,
+      deployerAddress: address,
+    });
+  });
+
+  const deployedContractSummaries = Array.from(
+    deployedContractsMap.values()
+  ).sort((a, b) => Number(b.blockNumber) - Number(a.blockNumber));
+
+  const topContractSummaries = deployedContractSummaries.slice(0, 10);
+  const contractDetailsMap = await fetchContractDetailMap(
+    topContractSummaries.map((summary) => summary.contractAddress)
+  );
+  const deployedContracts = topContractSummaries.map((summary) => {
+    const detail = contractDetailsMap.get(
+      summary.contractAddress.toLowerCase()
+    );
+    return detail || buildFallbackContract(summary, address);
+  });
+
+  const transactionsToDisplay = transactions.slice(0, 10);
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
@@ -49,28 +92,79 @@ export default async function AddressPage({
         </div>
       </div>
 
-      {/* Transactions List */}
-      <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-3 md:mb-4">
-        Transactions
-      </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <section>
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+              Deployed Contracts
+            </h2>
+            <div className="flex items-center gap-3">
+              <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                Total {deployedContractsMap.size}
+              </div>
+              <Link
+                href={`/address/${address}/contracts`}
+                className={`text-xs md:text-sm hover:underline ${
+                  deployedContractsMap.size > 0
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                }`}
+                aria-disabled={deployedContractsMap.size === 0}
+              >
+                VIEW ALL →
+              </Link>
+            </div>
+          </div>
 
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
-        <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
-          Total {pagination.totalCount} transactions
-        </div>
+          {topContractSummaries.length === 0 ? (
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300">
+              이 주소가 배포한 컨트랙트가 없습니다.
+            </div>
+          ) : (
+            <div className="space-y-3 md:space-y-4">
+              {deployedContracts.map((contract) => (
+                <ContractCard key={contract.address} contract={contract} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section>
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+              Transactions
+            </h2>
+            <div className="flex items-center gap-3">
+              <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                Total {pagination.totalCount}
+              </div>
+              <Link
+                href={`/address/${address}/transactions`}
+                className={`text-xs md:text-sm hover:underline ${
+                  pagination.totalCount > 0
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                }`}
+                aria-disabled={pagination.totalCount === 0}
+              >
+                VIEW ALL →
+              </Link>
+            </div>
+          </div>
+
+          <div className="space-y-3 md:space-y-4">
+            {transactionsToDisplay.length === 0 ? (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300">
+                이 주소와 관련된 트랜잭션이 없습니다.
+              </div>
+            ) : (
+              transactionsToDisplay.map((tx) => (
+                <TransactionCard key={tx.hash} transaction={tx} />
+              ))
+            )}
+          </div>
+        </section>
       </div>
-
-      <div className="space-y-3 md:space-y-4">
-        {transactions.map((tx) => (
-          <TransactionCard key={tx.hash} transaction={tx} />
-        ))}
-      </div>
-
-      <Pagination
-        currentPage={pagination.currentPage}
-        totalPages={pagination.totalPages}
-        basePath={`/address/${address}`}
-      />
     </div>
   );
 }

@@ -56,6 +56,16 @@ export interface Contract {
   createdAt: string;
 }
 
+export interface DeployedContractSummary {
+  contractAddress: string;
+  transactionHash: string;
+  blockNumber: string;
+  blockHash?: string;
+  timestamp: string;
+  status?: number;
+  deployerAddress?: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
