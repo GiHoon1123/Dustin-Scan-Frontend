@@ -14,6 +14,7 @@ export default function BlockCard({ block }: BlockCardProps) {
 
   const handleProposerClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     router.push(`/address/${block.proposer}`);
   };
 
