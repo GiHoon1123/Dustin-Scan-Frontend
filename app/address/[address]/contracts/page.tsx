@@ -1,9 +1,7 @@
 import ContractCard from "@/components/ContractCard";
 import Pagination from "@/components/Pagination";
-import {
-  getAccount,
-  getContractsByDeployer,
-} from "@/lib/api";
+import { getAccount, getContractsByDeployer } from "@/lib/api";
+import type { Contract } from "@/lib/types";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -27,8 +25,15 @@ export default async function AddressContractsPage({
     notFound();
   }
 
-  let contracts;
-  let pagination;
+  let contracts: Contract[] = [];
+  let pagination = {
+    currentPage: page,
+    pageSize: CONTRACTS_PER_PAGE,
+    totalCount: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrevious: false,
+  };
 
   try {
     const contractsData = await getContractsByDeployer(
@@ -37,18 +42,14 @@ export default async function AddressContractsPage({
       CONTRACTS_PER_PAGE
     );
     contracts = contractsData.data.items;
-    pagination = contractsData.data.pagination;
+    pagination =
+      contractsData.data.pagination ??
+      {
+        ...pagination,
+        totalCount: contracts.length,
+      };
   } catch (error) {
     console.error("Contracts fetch error:", error);
-    contracts = [];
-    pagination = {
-      currentPage: 1,
-      pageSize: CONTRACTS_PER_PAGE,
-      totalCount: 0,
-      totalPages: 1,
-      hasNext: false,
-      hasPrevious: false,
-    };
   }
 
   return (
