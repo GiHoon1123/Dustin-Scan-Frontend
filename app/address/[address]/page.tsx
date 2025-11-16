@@ -30,14 +30,14 @@ export default async function AddressPage({
     hasPrevious: false,
   };
   let tokenPreview: TokenBalance[] = [];
-  let tokenPreviewPagination: {
-    currentPage: number;
-    pageSize: number;
-    totalCount: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrevious: boolean;
-  } | null = null;
+  let tokenPreviewPagination = {
+    currentPage: 1,
+    pageSize: 10,
+    totalCount: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrevious: false,
+  };
 
   try {
     const accountData = await getAccount(address);
@@ -62,20 +62,17 @@ export default async function AddressPage({
   try {
     const tokensData = await getTokenBalancesByAddress(address, 1, 10);
     tokenPreview = tokensData.data.items;
-    if (tokensData.data.pagination) {
-      tokenPreviewPagination = tokensData.data.pagination;
-    } else {
-      tokenPreviewPagination = {
+    tokenPreviewPagination =
+      tokensData.data.pagination ?? {
         ...tokenPreviewPagination,
         totalCount: tokenPreview.length,
       };
-    }
   } catch (error) {
     console.error("Token preview fetch error:", error);
   }
 
   const totalContracts = contractPreviewPagination.totalCount ?? 0;
-  const totalTokens = tokenPreviewPagination?.totalCount ?? tokenPreview.length;
+  const totalTokens = tokenPreviewPagination.totalCount ?? tokenPreview.length;
   const transactionsToDisplay = transactions.slice(0, 10);
 
   return (

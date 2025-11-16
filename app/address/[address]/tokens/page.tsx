@@ -1,5 +1,6 @@
 import Pagination from "@/components/Pagination";
 import { getAccount, getTokenBalancesByAddress } from "@/lib/api";
+import type { TokenBalance } from "@/lib/types";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -23,8 +24,15 @@ export default async function AddressTokensPage({
     notFound();
   }
 
-  let tokens;
-  let pagination;
+  let tokens: TokenBalance[] = [];
+  let pagination = {
+    currentPage: page,
+    pageSize: TOKENS_PER_PAGE,
+    totalCount: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrevious: false,
+  };
 
   try {
     const tokensData = await getTokenBalancesByAddress(
@@ -35,24 +43,11 @@ export default async function AddressTokensPage({
     tokens = tokensData.data.items;
     pagination =
       tokensData.data.pagination ?? {
-        currentPage: page,
-        pageSize: TOKENS_PER_PAGE,
+        ...pagination,
         totalCount: tokens.length,
-        totalPages: 1,
-        hasNext: false,
-        hasPrevious: false,
       };
   } catch (error) {
     console.error("Tokens fetch error:", error);
-    tokens = [];
-    pagination = {
-      currentPage: 1,
-      pageSize: TOKENS_PER_PAGE,
-      totalCount: 0,
-      totalPages: 1,
-      hasNext: false,
-      hasPrevious: false,
-    };
   }
 
   return (
