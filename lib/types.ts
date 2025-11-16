@@ -14,6 +14,13 @@ export interface Block {
   transactions?: Transaction[]; // 블록 상세 조회 시 포함
 }
 
+export interface TransactionLog {
+  address: string;
+  topics: string[];
+  data: string;
+  logIndex: number;
+}
+
 export interface Transaction {
   hash: string;
   blockHash: string;
@@ -29,6 +36,7 @@ export interface Transaction {
   cumulativeGasUsed?: string;
   contractAddress?: string | null;
   createdAt: string;
+  logs?: TransactionLog[];
 }
 
 export interface Account {
@@ -39,6 +47,14 @@ export interface Account {
   txCount: number;
 }
 
+export interface TokenBalance {
+  tokenAddress: string;
+  name: string | null;
+  symbol: string | null;
+  decimals: number | null;
+  balance: string;
+}
+
 export interface Contract {
   address: string;
   deployer: string;
@@ -47,7 +63,7 @@ export interface Contract {
   blockHash: string;
   bytecode: string | null;
   status: 0 | 1;
-  abi: any[] | null;
+  abi: unknown[] | null;
   name: string | null;
   sourceCode: string | null;
   compilerVersion: string | null;

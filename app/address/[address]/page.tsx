@@ -3,9 +3,10 @@ import TransactionCard from "@/components/TransactionCard";
 import {
   getAccount,
   getContractsByDeployer,
+  getTokenBalancesByAddress,
   getTransactionsByAddress,
 } from "@/lib/api";
-import { Contract } from "@/lib/types";
+import { Contract, TokenBalance } from "@/lib/types";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -28,6 +29,15 @@ export default async function AddressPage({
     hasNext: false,
     hasPrevious: false,
   };
+  let tokenPreview: TokenBalance[] = [];
+  let tokenPreviewPagination: {
+    currentPage: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  } | null = null;
 
   try {
     const accountData = await getAccount(address);
@@ -49,8 +59,24 @@ export default async function AddressPage({
     console.error("Contract preview fetch error:", error);
   }
 
-  const transactionsToDisplay = transactions.slice(0, 10);
+  try {
+    const tokensData = await getTokenBalancesByAddress(address, 1, 10);
+    tokenPreview = tokensData.data.items;
+    if (tokensData.data.pagination) {
+      tokenPreviewPagination = tokensData.data.pagination;
+    } else {
+      tokenPreviewPagination = {
+        ...tokenPreviewPagination,
+        totalCount: tokenPreview.length,
+      };
+    }
+  } catch (error) {
+    console.error("Token preview fetch error:", error);
+  }
+
   const totalContracts = contractPreviewPagination.totalCount ?? 0;
+  const totalTokens = tokenPreviewPagination?.totalCount ?? tokenPreview.length;
+  const transactionsToDisplay = transactions.slice(0, 10);
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
@@ -69,6 +95,23 @@ export default async function AddressPage({
             label="Total Transactions"
             value={account.txCount.toString()}
           />
+          <div className="flex flex-col sm:flex-row border-b border-gray-200 dark:border-gray-700 pb-3">
+            <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 w-full sm:w-48 mb-1 sm:mb-0">
+              Token Holdings:
+            </div>
+            <div className="flex-1 text-sm md:text-base text-gray-900 dark:text-white">
+              {totalTokens > 0 ? (
+                <Link
+                  href={`/address/${address}/tokens`}
+                  className="text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  {totalTokens.toString()}
+                </Link>
+              ) : (
+                "0"
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

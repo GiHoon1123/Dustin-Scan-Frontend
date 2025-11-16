@@ -4,6 +4,7 @@ import {
   Block,
   Contract,
   PaginatedResponse,
+  TokenBalance,
   Transaction,
 } from "./types";
 
@@ -94,6 +95,22 @@ export async function getAccount(
     cache: "no-store",
   });
   if (!res.ok) throw new Error("Failed to fetch account");
+  return res.json();
+}
+
+// 주소별 토큰 잔액 목록 조회
+export async function getTokenBalancesByAddress(
+  address: string,
+  page = 1,
+  limit = 10
+): Promise<PaginatedResponse<TokenBalance>> {
+  const res = await fetch(
+    `${API_BASE_URL}/accounts/${address}/tokens?page=${page}&limit=${limit}`,
+    {
+      cache: "no-store",
+    }
+  );
+  if (!res.ok) throw new Error("Failed to fetch token balances");
   return res.json();
 }
 
