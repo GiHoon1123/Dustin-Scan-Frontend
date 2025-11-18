@@ -1,15 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+import { useMemo, useState } from "react";
 
 export default function UniversalSearchBar() {
   const [search, setSearch] = useState("");
   const [hint, setHint] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const router = useRouter();
+
+  // 컴포넌트 내부에서 런타임에 환경 변수 읽기 (빌드 타임 주입 문제 해결)
+  const API_BASE_URL = useMemo(() => process.env.NEXT_PUBLIC_API_URL, []);
 
   const detectInputType = (input: string) => {
     if (!input.trim()) {
@@ -65,9 +66,7 @@ export default function UniversalSearchBar() {
     const trimmed = search.trim();
     const type = detectInputType(trimmed);
     const normalized =
-      type === "address" || type === "hash"
-        ? trimmed.toLowerCase()
-        : trimmed;
+      type === "address" || type === "hash" ? trimmed.toLowerCase() : trimmed;
 
     if (!type) {
       router.push("/not-found");
