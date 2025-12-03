@@ -1,10 +1,12 @@
 import BlockTransactions from "@/components/BlockTransactions";
 import TransactionCountButton from "@/components/TransactionCountButton";
+import CacheIndicator from "@/components/CacheIndicator";
 import {
   getBlockByHash,
   getBlockByNumber,
   getTransactionByHash,
 } from "@/lib/api";
+import { CacheKeys } from "@/lib/cache";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -19,21 +21,21 @@ export default async function BlockDetailPage({
   const isHash = id.startsWith("0x");
 
   let block;
+  let fromCache = false;
   try {
     const blockData = isHash
       ? await getBlockByHash(id)
       : await getBlockByNumber(Number(id));
     block = blockData.data;
+    // API 함수 내부에서 캐시를 사용하므로, 성공하면 캐시에서 온 것일 수도 있음
+    // 하지만 정확한 판단은 어려우므로 일단 false로 둠
   } catch (error) {
     // 블록이 없으면, 해시인 경우 트랜잭션으로 확인
     if (isHash && id.length === 66) {
-      // 0x + 64자 = 해시
       try {
         await getTransactionByHash(id);
-        // 트랜잭션이 존재하면 리다이렉트
         redirect(`/transactions/${id}`);
       } catch (txError) {
-        // 트랜잭션도 없으면 not found
         notFound();
       }
     }
@@ -42,9 +44,16 @@ export default async function BlockDetailPage({
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
-      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6">
-        Block #{block.number}
-      </h1>
+      <div className="flex items-center justify-between mb-4 md:mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+          Block #{block.number}
+        </h1>
+        {fromCache && (
+          <CacheIndicator
+            cacheKey={isHash ? CacheKeys.blockByHash(id) : CacheKeys.blockByNumber(Number(id))}
+          />
+        )}
+      </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-6">
         <div className="space-y-4">

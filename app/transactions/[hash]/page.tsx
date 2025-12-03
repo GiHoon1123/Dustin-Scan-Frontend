@@ -1,5 +1,7 @@
 import TransactionLogs from "@/components/TransactionLogs";
+import CacheIndicator from "@/components/CacheIndicator";
 import { getTransactionByHash } from "@/lib/api";
+import { CacheKeys } from "@/lib/cache";
 import Link from "next/link";
 
 import type { Transaction } from "@/lib/types";
@@ -15,16 +17,36 @@ export default async function TransactionDetailPage({
   const search = await searchParams;
   const view = search.view === "logs" ? "logs" : "overview";
 
-  const txData = await getTransactionByHash(hash);
-  const tx = txData.data as Transaction;
+  let tx: Transaction;
+  let fromCache = false;
+  try {
+    const txData = await getTransactionByHash(hash);
+    tx = txData.data as Transaction;
+  } catch (error) {
+    // 캐시 확인
+    if (typeof window !== 'undefined') {
+      const cached = require("@/lib/cache").getCache(CacheKeys.transactionByHash(hash));
+      if (cached) {
+        tx = cached.data.data as Transaction;
+        fromCache = true;
+      } else {
+        throw error;
+      }
+    } else {
+      throw error;
+    }
+  }
 
   const isSuccess = tx.status === 1;
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
-      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6">
-        Transaction Details
-      </h1>
+      <div className="flex items-center justify-between mb-4 md:mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+          Transaction Details
+        </h1>
+        {fromCache && <CacheIndicator cacheKey={CacheKeys.transactionByHash(hash)} />}
+      </div>
 
       <div className="mb-4 md:mb-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex gap-4">

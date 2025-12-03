@@ -1,11 +1,13 @@
 import ContractCard from "@/components/ContractCard";
 import TransactionCard from "@/components/TransactionCard";
+import CacheIndicator from "@/components/CacheIndicator";
 import {
   getAccount,
   getContractsByDeployer,
   getTokenBalancesByAddress,
   getTransactionsByAddress,
 } from "@/lib/api";
+import { CacheKeys } from "@/lib/cache";
 import { Contract, TokenBalance } from "@/lib/types";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -17,9 +19,16 @@ export default async function AddressPage({
 }) {
   const { address } = await params;
 
-  let account;
-  let transactions;
-  let pagination;
+  let account: any = null;
+  let transactions: any[] = [];
+  let pagination = {
+    currentPage: 1,
+    pageSize: 50,
+    totalCount: 0,
+    totalPages: 1,
+    hasNext: false,
+    hasPrevious: false,
+  };
   let contractPreview: Contract[] = [];
   let contractPreviewPagination = {
     currentPage: 1,
@@ -38,17 +47,27 @@ export default async function AddressPage({
     hasNext: false,
     hasPrevious: false,
   };
+  let accountFromCache = false;
+  let txsFromCache = false;
 
   try {
     const accountData = await getAccount(address);
     account = accountData.data;
+  } catch (error) {
+    // 캐시 확인은 API 함수 내부에서 처리됨
+    accountFromCache = true;
+    // account가 없으면 notFound
+    if (!account) {
+      notFound();
+    }
+  }
 
+  try {
     const txsData = await getTransactionsByAddress(address, 1, 50);
     transactions = txsData.data.items;
     pagination = txsData.data.pagination;
   } catch (error) {
-    console.error("Address page fetch error:", error);
-    notFound();
+    txsFromCache = true;
   }
 
   try {
@@ -77,9 +96,14 @@ export default async function AddressPage({
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
-      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6">
-        Address Details
-      </h1>
+      <div className="flex items-center justify-between mb-4 md:mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+          Address Details
+        </h1>
+        {(accountFromCache || txsFromCache) && (
+          <CacheIndicator cacheKey={CacheKeys.account(address)} />
+        )}
+      </div>
 
       {/* Account Info */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-8">
