@@ -4,6 +4,7 @@ import BlockCard from "@/components/BlockCard";
 import TransactionCard from "@/components/TransactionCard";
 import UniversalSearchBar from "@/components/UniversalSearchBar";
 import DataLoader from "@/components/DataLoader";
+import CacheIndicator from "@/components/CacheIndicator";
 import { getBlocks, getTransactions } from "@/lib/api";
 import { CacheKeys } from "@/lib/cache";
 import Link from "next/link";
