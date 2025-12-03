@@ -1,36 +1,14 @@
+"use client";
+
 import BlockCard from "@/components/BlockCard";
 import TransactionCard from "@/components/TransactionCard";
 import UniversalSearchBar from "@/components/UniversalSearchBar";
-import CacheIndicator from "@/components/CacheIndicator";
+import DataLoader from "@/components/DataLoader";
 import { getBlocks, getTransactions } from "@/lib/api";
 import { CacheKeys } from "@/lib/cache";
 import Link from "next/link";
 
-export default async function HomePage() {
-  let blocks: any[] = [];
-  let transactions: any[] = [];
-  let blocksFromCache = false;
-  let txsFromCache = false;
-
-  // 최신 블록 10개
-  try {
-    const blocksData = await getBlocks(1, 10);
-    blocks = blocksData.data.items;
-  } catch (error) {
-    // 에러 발생 시 빈 배열 (캐시는 API 함수 내부에서 처리됨)
-    blocks = [];
-    blocksFromCache = true;
-  }
-
-  // 최신 트랜잭션 10개
-  try {
-    const txsData = await getTransactions(1, 10);
-    transactions = txsData.data.items;
-  } catch (error) {
-    // 에러 발생 시 빈 배열 (캐시는 API 함수 내부에서 처리됨)
-    transactions = [];
-    txsFromCache = true;
-  }
+export default function HomePage() {
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
@@ -55,30 +33,45 @@ export default async function HomePage() {
             <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
               📦 Latest Blocks
             </h2>
-            <div className="flex items-center gap-2">
-              {blocksFromCache && (
-                <CacheIndicator cacheKey={CacheKeys.blocks(1, 10)} />
-              )}
-              <Link
-                href="/blocks"
-                className="text-xs md:text-sm text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                <span className="hidden sm:inline">VIEW ALL BLOCKS →</span>
-                <span className="sm:hidden">ALL →</span>
-              </Link>
-            </div>
+            <Link
+              href="/blocks"
+              className="text-xs md:text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              <span className="hidden sm:inline">VIEW ALL BLOCKS →</span>
+              <span className="sm:hidden">ALL →</span>
+            </Link>
           </div>
-          <div className="space-y-2 md:space-y-3">
-            {blocks.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300 text-center">
-                서버 연결 실패
-              </div>
-            ) : (
-              blocks.map((block) => (
-                <BlockCard key={block.hash} block={block} />
-              ))
+          <DataLoader
+            cacheKey={CacheKeys.blocks(1, 10)}
+            loadData={async () => {
+              const data = await getBlocks(1, 10);
+              return data.data.items;
+            }}
+            render={(blocks, isLoading, fromCache) => (
+              <>
+                <div className="space-y-2 md:space-y-3">
+                  {isLoading ? (
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+                      로딩 중...
+                    </div>
+                  ) : blocks && blocks.length > 0 ? (
+                    blocks.map((block: any) => (
+                      <BlockCard key={block.hash} block={block} />
+                    ))
+                  ) : (
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+                      서버 연결 실패
+                    </div>
+                  )}
+                </div>
+                {fromCache && !isLoading && (
+                  <div className="mt-2">
+                    <CacheIndicator cacheKey={CacheKeys.blocks(1, 10)} />
+                  </div>
+                )}
+              </>
             )}
-          </div>
+          />
         </div>
 
         {/* 오른쪽: 최신 트랜잭션 */}
@@ -87,30 +80,45 @@ export default async function HomePage() {
             <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
               💸 Latest Transactions
             </h2>
-            <div className="flex items-center gap-2">
-              {txsFromCache && (
-                <CacheIndicator cacheKey={CacheKeys.transactions(1, 10)} />
-              )}
-              <Link
-                href="/transactions"
-                className="text-xs md:text-sm text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                <span className="hidden sm:inline">VIEW ALL TRANSACTIONS →</span>
-                <span className="sm:hidden">ALL →</span>
-              </Link>
-            </div>
+            <Link
+              href="/transactions"
+              className="text-xs md:text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              <span className="hidden sm:inline">VIEW ALL TRANSACTIONS →</span>
+              <span className="sm:hidden">ALL →</span>
+            </Link>
           </div>
-          <div className="space-y-2 md:space-y-3">
-            {transactions.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300 text-center">
-                서버 연결 실패
-              </div>
-            ) : (
-              transactions.map((tx) => (
-                <TransactionCard key={tx.hash} transaction={tx} />
-              ))
+          <DataLoader
+            cacheKey={CacheKeys.transactions(1, 10)}
+            loadData={async () => {
+              const data = await getTransactions(1, 10);
+              return data.data.items;
+            }}
+            render={(transactions, isLoading, fromCache) => (
+              <>
+                <div className="space-y-2 md:space-y-3">
+                  {isLoading ? (
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+                      로딩 중...
+                    </div>
+                  ) : transactions && transactions.length > 0 ? (
+                    transactions.map((tx: any) => (
+                      <TransactionCard key={tx.hash} transaction={tx} />
+                    ))
+                  ) : (
+                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+                      서버 연결 실패
+                    </div>
+                  )}
+                </div>
+                {fromCache && !isLoading && (
+                  <div className="mt-2">
+                    <CacheIndicator cacheKey={CacheKeys.transactions(1, 10)} />
+                  </div>
+                )}
+              </>
             )}
-          </div>
+          />
         </div>
       </div>
     </div>
