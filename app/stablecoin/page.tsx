@@ -166,8 +166,9 @@ export default function StablecoinPage() {
 
       // 조회된 정보로 유효성 검사
       const userBalanceDstn = parseFloat(weiToDstn(balance));
-      const collateralAmountDstn = parseFloat(weiToDstn(position.collateralAmount));
-      const debtAmountDstn = parseFloat(weiToDstn(position.debtAmount));
+      // 백엔드에서 이미 DSTN 단위로 변환된 값을 받음
+      const collateralAmountDstn = parseFloat(position.collateralAmount);
+      const debtAmountDstn = parseFloat(position.debtAmount);
 
       switch (activeTab) {
         case "deposit": {
@@ -271,8 +272,9 @@ export default function StablecoinPage() {
     }
 
     const userBalanceDstn = parseFloat(weiToDstn(balance));
-    const collateralAmountDstn = parseFloat(weiToDstn(position.collateralAmount));
-    const debtAmountDstn = parseFloat(weiToDstn(position.debtAmount));
+    // 백엔드에서 이미 DSTN 단위로 변환된 값을 받음
+    const collateralAmountDstn = parseFloat(position.collateralAmount);
+    const debtAmountDstn = parseFloat(position.debtAmount);
     const amountNum = parseFloat(amount);
 
     if (!amount || isNaN(amountNum) || amountNum <= 0) {
@@ -283,7 +285,9 @@ export default function StablecoinPage() {
     switch (activeTab) {
       case "deposit": {
         setMaxAmount(userBalanceDstn);
-        if (amountNum > userBalanceDstn) {
+        // 부동소수점 정밀도 문제 해결: 작은 오차 허용 (0.0001)
+        const epsilon = 0.0001;
+        if (amountNum > userBalanceDstn + epsilon) {
           setAmountError(`보유 잔고를 초과했습니다. (최대: ${userBalanceDstn.toFixed(4)} DSTN)`);
         } else {
           setAmountError(null);
@@ -316,10 +320,14 @@ export default function StablecoinPage() {
           if (amountNum > 0) {
             if (maxMintableStablecoin <= 0) {
               setAmountError("담보비율이 이미 최소치입니다. 더 이상 발행할 수 없습니다.");
-            } else if (amountNum > maxMintableStablecoin) {
-              setAmountError(`최대 발행 가능량을 초과했습니다. (최대: ${maxMintableStablecoin.toFixed(4)} 스테이블코인)`);
             } else {
-              setAmountError(null);
+              // 부동소수점 정밀도 문제 해결: 작은 오차 허용 (0.0001)
+              const epsilon = 0.0001;
+              if (amountNum > maxMintableStablecoin + epsilon) {
+                setAmountError(`최대 발행 가능량을 초과했습니다. (최대: ${maxMintableStablecoin.toFixed(4)} 스테이블코인)`);
+              } else {
+                setAmountError(null);
+              }
             }
           } else {
             // 입력값이 없으면 에러 없음
@@ -330,7 +338,9 @@ export default function StablecoinPage() {
       }
       case "redeem": {
         setMaxAmount(debtAmountDstn);
-        if (amountNum > debtAmountDstn) {
+        // 부동소수점 정밀도 문제 해결: 작은 오차 허용 (0.0001)
+        const epsilon = 0.0001;
+        if (amountNum > debtAmountDstn + epsilon) {
           setAmountError(`부채를 초과했습니다. (최대: ${debtAmountDstn.toFixed(4)} 스테이블코인)`);
         } else {
           setAmountError(null);
@@ -339,7 +349,9 @@ export default function StablecoinPage() {
       }
       case "withdraw": {
         setMaxAmount(collateralAmountDstn);
-        if (amountNum > collateralAmountDstn) {
+        // 부동소수점 정밀도 문제 해결: 작은 오차 허용 (0.0001)
+        const epsilon = 0.0001;
+        if (amountNum > collateralAmountDstn + epsilon) {
           setAmountError(`예치한 담보를 초과했습니다. (최대: ${collateralAmountDstn.toFixed(4)} DSTN)`);
         } else {
           setAmountError(null);
@@ -422,13 +434,21 @@ export default function StablecoinPage() {
               <div className="text-lg font-semibold text-gray-900 dark:text-white">
                 {balance !== null ? weiToDstn(balance) : "-"} DSTN
               </div>
+              {balance !== null && (
+                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-mono">
+                  {balance} Wei
+                </div>
+              )}
             </div>
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
               <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                 담보 양
               </div>
               <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {weiToDstn(position.collateralAmount)} DSTN
+                {position.collateralAmount} DSTN
+              </div>
+              <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-mono">
+                {position.collateralAmountWei} Wei
               </div>
             </div>
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
@@ -436,7 +456,10 @@ export default function StablecoinPage() {
                 부채 양
               </div>
               <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {weiToDstn(position.debtAmount)} 스테이블코인
+                {position.debtAmount} 스테이블코인
+              </div>
+              <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-mono">
+                {position.debtAmountWei} Wei
               </div>
             </div>
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">

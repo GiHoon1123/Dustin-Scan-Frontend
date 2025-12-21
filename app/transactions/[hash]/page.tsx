@@ -111,8 +111,19 @@ export default async function TransactionDetailPage({
                 mono
                 link={`/address/${tx.to}`}
               />
-              <InfoRow label="Value" value={`${tx.value} DSTN`} />
-              <InfoRow label="Value (Wei)" value={tx.valueWei} />
+              <div className="flex flex-col sm:flex-row border-b border-gray-200 dark:border-gray-700 pb-3">
+                <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 w-full sm:w-48 mb-1 sm:mb-0">
+                  Value:
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
+                    {tx.value} DSTN
+                  </div>
+                  <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-mono">
+                    {tx.valueWei} Wei
+                  </div>
+                </div>
+              </div>
               <InfoRow label="Nonce" value={tx.nonce.toString()} />
               <InfoRow
                 label="Timestamp"

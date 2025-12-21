@@ -66,9 +66,14 @@ export default function TransactionCard({ transaction }: TransactionCardProps) {
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-0">
           <span className="text-gray-500 dark:text-gray-400 w-16">Value:</span>
-          <span className="font-semibold text-green-600 dark:text-green-400">
-            {transaction.value} DSTN
-          </span>
+          <div className="flex flex-col">
+            <span className="font-semibold text-green-600 dark:text-green-400">
+              {transaction.value} DSTN
+            </span>
+            <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">
+              {transaction.valueWei} Wei
+            </span>
+          </div>
         </div>
       </div>
     </Link>

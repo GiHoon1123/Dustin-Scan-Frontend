@@ -109,8 +109,19 @@ export default async function AddressPage({
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-8">
         <div className="space-y-4">
           <InfoRow label="Address" value={account.address} mono />
-          <InfoRow label="Balance" value={`${account.balance} DSTN`} />
-          <InfoRow label="Balance (Wei)" value={account.balanceWei} />
+          <div className="flex flex-col sm:flex-row border-b border-gray-200 dark:border-gray-700 pb-3">
+            <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 w-full sm:w-48 mb-1 sm:mb-0">
+              Balance:
+            </div>
+            <div className="flex-1">
+              <div className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
+                {account.balance} DSTN
+              </div>
+              <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-mono">
+                {account.balanceWei} Wei
+              </div>
+            </div>
+          </div>
           <InfoRow label="Nonce" value={account.nonce.toString()} />
           <InfoRow
             label="Total Transactions"

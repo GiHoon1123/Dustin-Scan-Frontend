@@ -97,8 +97,10 @@ export interface PaginatedResponse<T> {
 }
 
 export interface StablecoinPosition {
-  collateralAmount: string;
-  debtAmount: string;
+  collateralAmount: string; // DSTN 단위
+  collateralAmountWei: string; // Wei 단위
+  debtAmount: string; // DSTN 단위
+  debtAmountWei: string; // Wei 단위
   collateralRatio: string;
 }
 
