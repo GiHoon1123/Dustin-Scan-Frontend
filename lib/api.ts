@@ -550,3 +550,27 @@ export async function deployContract(bytecode: string): Promise<
   }
   return res.json();
 }
+
+// 지갑 생성
+export async function createWallet(): Promise<
+  ApiResponse<{
+    privateKey: string;
+    publicKey: string;
+    address: string;
+    balance: string;
+    nonce: number;
+  }>
+> {
+  const res = await fetch(`${API_BASE_URL}/accounts/create-wallet`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to create wallet");
+  }
+  return res.json();
+}

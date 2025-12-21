@@ -5,6 +5,7 @@ import { useState } from "react";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isServicesOpen, setIsServicesOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 shadow-md">
@@ -41,6 +42,45 @@ export default function Header() {
             >
               Contracts
             </Link>
+            
+            {/* Services 드롭다운 */}
+            <div
+              className="relative"
+              onMouseEnter={() => setIsServicesOpen(true)}
+              onMouseLeave={() => setIsServicesOpen(false)}
+            >
+              <button className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition">
+                Services
+              </button>
+              {isServicesOpen && (
+                <div
+                  className="absolute top-full left-0 pt-2 w-48 z-50"
+                  onMouseEnter={() => setIsServicesOpen(true)}
+                  onMouseLeave={() => setIsServicesOpen(false)}
+                >
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2">
+                    <Link
+                      href="/staking"
+                      className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition"
+                    >
+                      Staking
+                    </Link>
+                    <Link
+                      href="/stablecoin"
+                      className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition"
+                    >
+                      Stablecoin
+                    </Link>
+                    <Link
+                      href="/wallet"
+                      className="block px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition"
+                    >
+                      Wallet
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* 모바일 메뉴 버튼 */}
@@ -105,6 +145,30 @@ export default function Header() {
                 className="px-4 py-3 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition"
               >
                 Contracts
+              </Link>
+              <div className="px-4 py-3 text-gray-700 dark:text-gray-300 font-semibold">
+                Services
+              </div>
+              <Link
+                href="/staking"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="px-8 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition"
+              >
+                Staking
+              </Link>
+              <Link
+                href="/stablecoin"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="px-8 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition"
+              >
+                Stablecoin
+              </Link>
+              <Link
+                href="/wallet"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="px-8 py-2 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition"
+              >
+                Wallet
               </Link>
             </div>
           </nav>
