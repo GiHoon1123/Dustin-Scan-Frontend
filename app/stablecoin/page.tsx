@@ -208,6 +208,22 @@ export default function StablecoinPage() {
             setIsSubmitting(false);
             return;
           }
+          
+          // 담보비율 150% 미만으로 떨어지지 않도록 검증
+          // 1 DSTN = 1,000 USD (담보 가치)
+          // 1 스테이블코인 = 1 USD
+          const debtValueUSD = debtAmountDstn; // 스테이블코인 = USD
+          const minRequiredCollateralUSD = debtValueUSD * 1.5; // 최소 담보비율 150%
+          const minRequiredCollateralDstn = minRequiredCollateralUSD / 1000; // USD -> DSTN
+          const remainingCollateralDstn = collateralAmountDstn - amountNum;
+          
+          if (remainingCollateralDstn < minRequiredCollateralDstn) {
+            const maxWithdrawableDstn = Math.max(0, collateralAmountDstn - minRequiredCollateralDstn);
+            setSubmitError(`담보비율이 150% 미만으로 떨어집니다. 최대 출금 가능량: ${maxWithdrawableDstn.toFixed(4)} DSTN`);
+            setIsSubmitting(false);
+            return;
+          }
+          
           response = await withdrawCollateral(privateKey, amount);
           break;
         }
@@ -259,8 +275,31 @@ export default function StablecoinPage() {
     }
   };
 
+  // 담보비율 계산 및 표시
   const collateralRatio = position
-    ? parseFloat(position.collateralRatio)
+    ? (() => {
+        const collateralAmountDstn = parseFloat(position.collateralAmount);
+        const debtAmountDstn = parseFloat(position.debtAmount);
+        
+        // 담보가 0이면 담보비율은 0% 또는 N/A
+        if (collateralAmountDstn === 0) {
+          return debtAmountDstn === 0 ? 0 : null; // 부채도 없으면 0%, 부채가 있으면 N/A
+        }
+        
+        // 부채가 0이면 담보비율은 무한대이므로 특별 처리
+        if (debtAmountDstn === 0) {
+          return Infinity; // 무한대 표시
+        }
+        
+        const ratio = parseFloat(position.collateralRatio);
+        
+        // 무한대나 비정상적인 값 처리
+        if (!isFinite(ratio) || ratio < 0) {
+          return null;
+        }
+        
+        return ratio;
+      })()
     : null;
 
   // 실시간 유효성 검사
@@ -348,11 +387,27 @@ export default function StablecoinPage() {
         break;
       }
       case "withdraw": {
-        setMaxAmount(collateralAmountDstn);
+        // 담보 출금 시 최소 담보비율(150%) 유지 필요
+        // 1 DSTN = 1,000 USD (담보 가치)
+        // 1 스테이블코인 = 1 USD
+        // 최소 담보비율: 150% (1.5)
+        // 최소 필요 담보(USD) = 부채(USD) * 1.5
+        // 최소 필요 담보(DSTN) = 최소 필요 담보(USD) / 1000
+        // 최대 출금 가능량(DSTN) = 현재 담보(DSTN) - 최소 필요 담보(DSTN)
+        
+        const debtValueUSD = debtAmountDstn; // 스테이블코인 = USD
+        const minRequiredCollateralUSD = debtValueUSD * 1.5; // 최소 담보비율 150%
+        const minRequiredCollateralDstn = minRequiredCollateralUSD / 1000; // USD -> DSTN
+        const maxWithdrawableDstn = Math.max(0, collateralAmountDstn - minRequiredCollateralDstn);
+        
+        setMaxAmount(maxWithdrawableDstn);
+        
         // 부동소수점 정밀도 문제 해결: 작은 오차 허용 (0.0001)
         const epsilon = 0.0001;
         if (amountNum > collateralAmountDstn + epsilon) {
           setAmountError(`예치한 담보를 초과했습니다. (최대: ${collateralAmountDstn.toFixed(4)} DSTN)`);
+        } else if (amountNum > maxWithdrawableDstn + epsilon) {
+          setAmountError(`담보비율이 150% 미만으로 떨어집니다. (최대 출금 가능: ${maxWithdrawableDstn.toFixed(4)} DSTN)`);
         } else {
           setAmountError(null);
         }
@@ -468,7 +523,11 @@ export default function StablecoinPage() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {collateralRatio?.toFixed(2)}%
+                  {collateralRatio === null
+                    ? "N/A"
+                    : collateralRatio === Infinity
+                      ? "∞"
+                      : `${collateralRatio.toFixed(2)}%`}
                 </div>
                 {health !== null && (
                   <span
@@ -657,9 +716,15 @@ export default function StablecoinPage() {
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           ⚠️ 청산
         </h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          담보비율이 150% 미만인 포지션을 청산할 수 있습니다.
-        </p>
+        <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200 font-semibold mb-2">
+            ⚠️ 청산 기능 일시 중단
+          </p>
+          <p className="text-sm text-yellow-700 dark:text-yellow-300">
+            현재 고정 환율 시스템으로 운영 중이므로 청산 기능을 제공하지 않습니다.
+            담보비율이 150% 미만으로 떨어지면 자동으로 소각됩니다.
+          </p>
+        </div>
 
         <div className="space-y-4">
           <div>
@@ -671,7 +736,8 @@ export default function StablecoinPage() {
               value={liquidateAddress}
               onChange={(e) => setLiquidateAddress(e.target.value)}
               placeholder="0x..."
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+              disabled
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-500 font-mono text-sm cursor-not-allowed"
             />
           </div>
 
@@ -684,7 +750,8 @@ export default function StablecoinPage() {
               value={liquidatePrivateKey}
               onChange={(e) => setLiquidatePrivateKey(e.target.value)}
               placeholder="0x..."
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+              disabled
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-500 font-mono text-sm cursor-not-allowed"
             />
           </div>
 
@@ -710,10 +777,10 @@ export default function StablecoinPage() {
 
           <button
             onClick={handleLiquidate}
-            disabled={isLiquidating}
-            className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg transition font-semibold disabled:cursor-not-allowed"
+            disabled={true}
+            className="w-full px-6 py-3 bg-gray-400 text-white rounded-lg transition font-semibold cursor-not-allowed"
           >
-            {isLiquidating ? "청산 중..." : "청산 실행"}
+            청산 기능 일시 중단
           </button>
         </div>
       </div>
