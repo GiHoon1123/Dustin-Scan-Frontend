@@ -95,3 +95,18 @@ export interface PaginatedResponse<T> {
     };
   };
 }
+
+export interface StablecoinPosition {
+  collateralAmount: string;
+  debtAmount: string;
+  collateralRatio: string;
+}
+
+export interface StablecoinHealth {
+  isHealthy: boolean;
+}
+
+export interface StablecoinTransaction {
+  hash: string;
+  status: string;
+}

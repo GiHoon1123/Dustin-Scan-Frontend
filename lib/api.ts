@@ -4,6 +4,9 @@ import {
   Block,
   Contract,
   PaginatedResponse,
+  StablecoinHealth,
+  StablecoinPosition,
+  StablecoinTransaction,
   TokenBalance,
   Transaction,
 } from "./types";
@@ -573,4 +576,135 @@ export async function createWallet(): Promise<
     throw new Error(errorData.message || "Failed to create wallet");
   }
   return res.json();
+}
+
+// 스테이블코인 포지션 조회
+export async function getStablecoinPosition(
+  userAddress: string
+): Promise<StablecoinPosition> {
+  const res = await fetch(`${API_BASE_URL}/stablecoin/position/${userAddress}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new Error("Failed to fetch stablecoin position");
+  }
+  const data = await res.json();
+  // CommonResponseDto로 감싸져 있지 않으면 직접 반환
+  return data.data || data;
+}
+
+// 스테이블코인 건강도 확인
+export async function getStablecoinHealth(
+  userAddress: string
+): Promise<StablecoinHealth> {
+  const res = await fetch(`${API_BASE_URL}/stablecoin/health/${userAddress}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new Error("Failed to fetch stablecoin health");
+  }
+  const data = await res.json();
+  // CommonResponseDto로 감싸져 있지 않으면 직접 반환
+  return data.data || data;
+}
+
+// 담보 예치
+export async function depositCollateral(
+  privateKey: string,
+  amount: string
+): Promise<StablecoinTransaction> {
+  const res = await fetch(`${API_BASE_URL}/stablecoin/deposit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ privateKey, amount }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to deposit collateral");
+  }
+  const data = await res.json();
+  // CommonResponseDto로 감싸져 있지 않으면 직접 반환
+  return data.data || data;
+}
+
+// 스테이블코인 발행
+export async function mintStablecoin(
+  privateKey: string,
+  stablecoinAmount: string
+): Promise<StablecoinTransaction> {
+  const res = await fetch(`${API_BASE_URL}/stablecoin/mint`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ privateKey, stablecoinAmount }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to mint stablecoin");
+  }
+  const data = await res.json();
+  return data.data || data;
+}
+
+// 스테이블코인 상환
+export async function redeemStablecoin(
+  privateKey: string,
+  stablecoinAmount: string
+): Promise<StablecoinTransaction> {
+  const res = await fetch(`${API_BASE_URL}/stablecoin/redeem`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ privateKey, stablecoinAmount }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to redeem stablecoin");
+  }
+  const data = await res.json();
+  return data.data || data;
+}
+
+// 담보 인출
+export async function withdrawCollateral(
+  privateKey: string,
+  amount: string
+): Promise<StablecoinTransaction> {
+  const res = await fetch(`${API_BASE_URL}/stablecoin/withdraw`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ privateKey, amount }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to withdraw collateral");
+  }
+  const data = await res.json();
+  return data.data || data;
+}
+
+// 청산 실행
+export async function liquidateStablecoin(
+  privateKey: string,
+  userAddress: string
+): Promise<StablecoinTransaction> {
+  const res = await fetch(`${API_BASE_URL}/stablecoin/liquidate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ privateKey, userAddress }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to liquidate");
+  }
+  const data = await res.json();
+  return data.data || data;
 }
