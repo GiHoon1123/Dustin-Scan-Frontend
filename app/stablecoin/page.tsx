@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   depositCollateral,
   getAccount,
@@ -70,6 +70,8 @@ export default function StablecoinPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [amountError, setAmountError] = useState<string | null>(null);
+  const [maxAmount, setMaxAmount] = useState<number | null>(null);
 
   // 청산 폼 상태
   const [liquidateAddress, setLiquidateAddress] = useState("");
@@ -259,6 +261,93 @@ export default function StablecoinPage() {
   const collateralRatio = position
     ? parseFloat(position.collateralRatio)
     : null;
+
+  // 실시간 유효성 검사
+  useEffect(() => {
+    if (!position || !balance || positionAddress.toLowerCase() !== userAddress.toLowerCase()) {
+      setAmountError(null);
+      setMaxAmount(null);
+      return;
+    }
+
+    const userBalanceDstn = parseFloat(weiToDstn(balance));
+    const collateralAmountDstn = parseFloat(weiToDstn(position.collateralAmount));
+    const debtAmountDstn = parseFloat(weiToDstn(position.debtAmount));
+    const amountNum = parseFloat(amount);
+
+    if (!amount || isNaN(amountNum) || amountNum <= 0) {
+      setAmountError(null);
+      return;
+    }
+
+    switch (activeTab) {
+      case "deposit": {
+        setMaxAmount(userBalanceDstn);
+        if (amountNum > userBalanceDstn) {
+          setAmountError(`보유 잔고를 초과했습니다. (최대: ${userBalanceDstn.toFixed(4)} DSTN)`);
+        } else {
+          setAmountError(null);
+        }
+        break;
+      }
+      case "mint": {
+        // 발행 가능한 최대 스테이블코인 계산
+        // 1 DSTN = 1,000 USD (담보 가치)
+        // 1 스테이블코인 = 1 USD
+        // 최소 담보비율: 150% (1.5)
+        // 최대 부채(USD) = 담보 가치(USD) / 1.5
+        // 최대 부채(스테이블코인) = 최대 부채(USD) / 1 (스테이블코인 = USD)
+        // 추가 발행 가능 = 최대 부채 - 현재 부채
+        
+        if (collateralAmountDstn === 0) {
+          setAmountError("담보를 먼저 예치해주세요.");
+          setMaxAmount(0);
+        } else {
+          const collateralValueUSD = collateralAmountDstn * 1000; // DSTN -> USD (담보 가치)
+          const maxDebtUSD = collateralValueUSD / 1.5; // 최소 담보비율 150%
+          const maxDebtStablecoin = maxDebtUSD; // 스테이블코인 = USD (1:1)
+          const currentDebtStablecoin = debtAmountDstn; // 현재 부채는 이미 스테이블코인 단위
+          const maxMintableStablecoin = maxDebtStablecoin - currentDebtStablecoin;
+          
+          // 최대 발행 가능량 설정 (입력값이 없어도 표시하기 위해)
+          setMaxAmount(Math.max(0, maxMintableStablecoin));
+          
+          // 입력값이 있을 때만 에러 체크
+          if (amountNum > 0) {
+            if (maxMintableStablecoin <= 0) {
+              setAmountError("담보비율이 이미 최소치입니다. 더 이상 발행할 수 없습니다.");
+            } else if (amountNum > maxMintableStablecoin) {
+              setAmountError(`최대 발행 가능량을 초과했습니다. (최대: ${maxMintableStablecoin.toFixed(4)} 스테이블코인)`);
+            } else {
+              setAmountError(null);
+            }
+          } else {
+            // 입력값이 없으면 에러 없음
+            setAmountError(null);
+          }
+        }
+        break;
+      }
+      case "redeem": {
+        setMaxAmount(debtAmountDstn);
+        if (amountNum > debtAmountDstn) {
+          setAmountError(`부채를 초과했습니다. (최대: ${debtAmountDstn.toFixed(4)} 스테이블코인)`);
+        } else {
+          setAmountError(null);
+        }
+        break;
+      }
+      case "withdraw": {
+        setMaxAmount(collateralAmountDstn);
+        if (amountNum > collateralAmountDstn) {
+          setAmountError(`예치한 담보를 초과했습니다. (최대: ${collateralAmountDstn.toFixed(4)} DSTN)`);
+        } else {
+          setAmountError(null);
+        }
+        break;
+      }
+    }
+  }, [amount, activeTab, position, balance, positionAddress, userAddress]);
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
@@ -468,19 +557,38 @@ export default function StablecoinPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {activeTab === "deposit" || activeTab === "withdraw"
-                ? "DSTN 양"
-                : "스테이블코인 양"}
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {activeTab === "deposit" || activeTab === "withdraw"
+                  ? "DSTN 양"
+                  : "스테이블코인 양"}
+              </label>
+              {maxAmount !== null && maxAmount > 0 && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  최대: {maxAmount.toFixed(4)} {activeTab === "deposit" || activeTab === "withdraw" ? "DSTN" : "스테이블코인"}
+                </span>
+              )}
+            </div>
             <input
               type="number"
               step="0.0001"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0.0"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
+                amountError
+                  ? "border-red-500 dark:border-red-600"
+                  : "border-gray-300 dark:border-gray-600"
+              }`}
             />
+            {amountError && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{amountError}</p>
+            )}
+            {maxAmount !== null && maxAmount > 0 && !amountError && amount && parseFloat(amount) > 0 && (
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                가능한 금액: {maxAmount.toFixed(4)} {activeTab === "deposit" || activeTab === "withdraw" ? "DSTN" : "스테이블코인"}
+              </p>
+            )}
           </div>
 
           {submitError && (
