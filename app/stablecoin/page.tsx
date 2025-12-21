@@ -104,6 +104,8 @@ export default function StablecoinPage() {
       const accountData = accountRes.data || accountRes;
       // balanceWei를 사용 (Wei 단위)
       setBalance(accountData.balanceWei || accountData.balance || "0");
+      // 작업 폼의 주소도 자동으로 설정
+      setUserAddress(positionAddress);
     } catch (err: any) {
       setPositionError(err.message || "포지션 조회에 실패했습니다.");
       setPosition(null);
@@ -115,6 +117,12 @@ export default function StablecoinPage() {
   };
 
   const handleSubmit = async () => {
+    // 포지션 조회 확인
+    if (!position || !balance || positionAddress.toLowerCase() !== userAddress.toLowerCase()) {
+      setSubmitError("먼저 포지션을 조회해주세요. (위의 포지션 조회 섹션에서 주소를 입력하고 조회 버튼을 클릭하세요)");
+      return;
+    }
+
     // 필수 필드 검증
     if (!userAddress.trim() || !privateKey.trim() || !amount.trim()) {
       setSubmitError("모든 필드를 입력해주세요.");
@@ -154,15 +162,10 @@ export default function StablecoinPage() {
         return;
       }
 
-      // 보유 자산 범위 검증
-      const [accountRes, positionRes] = await Promise.all([
-        getAccount(userAddress).catch(() => null),
-        getStablecoinPosition(userAddress).catch(() => null),
-      ]);
-
-      const accountData = accountRes?.data || accountRes;
-      const userBalanceWei = accountData?.balanceWei || accountData?.balance || "0";
-      const userBalanceDstn = parseFloat(weiToDstn(userBalanceWei));
+      // 조회된 정보로 유효성 검사
+      const userBalanceDstn = parseFloat(weiToDstn(balance));
+      const collateralAmountDstn = parseFloat(weiToDstn(position.collateralAmount));
+      const debtAmountDstn = parseFloat(weiToDstn(position.debtAmount));
 
       switch (activeTab) {
         case "deposit": {
@@ -172,50 +175,46 @@ export default function StablecoinPage() {
             setIsSubmitting(false);
             return;
           }
-          // 백엔드가 DSTN 단위를 받아서 처리하므로 DSTN 그대로 전송
           response = await depositCollateral(privateKey, amount);
           break;
         }
         case "mint": {
-          // 발행: 담보가 있어야 함 (백엔드에서 담보비율 체크하지만 프론트에서도 기본 체크)
-          if (!positionRes || BigInt(positionRes.collateralAmount) === BigInt(0)) {
+          // 발행: 담보가 있어야 함
+          if (collateralAmountDstn === 0) {
             setSubmitError("담보를 먼저 예치해주세요.");
             setIsSubmitting(false);
             return;
           }
-          // 백엔드가 DSTN 단위를 받아서 처리하므로 DSTN 그대로 전송
           response = await mintStablecoin(privateKey, amount);
           break;
         }
         case "redeem": {
           // 상환: 부채 >= 상환 금액
-          const currentDebtDstn = positionRes ? parseFloat(weiToDstn(positionRes.debtAmount)) : 0;
-          if (!positionRes || currentDebtDstn < amountNum) {
-            setSubmitError(`상환 가능한 스테이블코인이 부족합니다. (부채: ${currentDebtDstn.toFixed(4)} 스테이블코인, 요청: ${amount} 스테이블코인)`);
+          if (debtAmountDstn < amountNum) {
+            setSubmitError(`상환 가능한 스테이블코인이 부족합니다. (부채: ${debtAmountDstn.toFixed(4)} 스테이블코인, 요청: ${amount} 스테이블코인)`);
             setIsSubmitting(false);
             return;
           }
-          // 백엔드가 DSTN 단위를 받아서 처리하므로 DSTN 그대로 전송
           response = await redeemStablecoin(privateKey, amount);
           break;
         }
         case "withdraw": {
           // 인출: 예치한 담보 >= 인출 금액
-          const currentCollateralDstn = positionRes ? parseFloat(weiToDstn(positionRes.collateralAmount)) : 0;
-          if (!positionRes || currentCollateralDstn < amountNum) {
-            setSubmitError(`인출 가능한 담보가 부족합니다. (예치: ${currentCollateralDstn.toFixed(4)} DSTN, 요청: ${amount} DSTN)`);
+          if (collateralAmountDstn < amountNum) {
+            setSubmitError(`인출 가능한 담보가 부족합니다. (예치: ${collateralAmountDstn.toFixed(4)} DSTN, 요청: ${amount} DSTN)`);
             setIsSubmitting(false);
             return;
           }
-          // 백엔드가 DSTN 단위를 받아서 처리하므로 DSTN 그대로 전송
           response = await withdrawCollateral(privateKey, amount);
           break;
         }
       }
 
       setTxHash(response.hash);
-      // 성공 시 폼 초기화
+      // 성공 시 폼 초기화 및 포지션 재조회
       setAmount("");
+      // 포지션 정보 갱신
+      await handleLoadPosition();
     } catch (err: any) {
       setSubmitError(err.message || "작업 실행에 실패했습니다.");
     } finally {
@@ -381,6 +380,14 @@ export default function StablecoinPage() {
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           💰 작업
         </h2>
+        
+        {(!position || !balance || positionAddress.toLowerCase() !== userAddress.toLowerCase()) && (
+          <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              ⚠️ 작업을 수행하려면 먼저 위의 <strong>포지션 조회</strong> 섹션에서 지갑 주소를 입력하고 조회해주세요.
+            </p>
+          </div>
+        )}
 
         {/* 탭 */}
         <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700">
@@ -436,9 +443,15 @@ export default function StablecoinPage() {
               type="text"
               value={userAddress}
               onChange={(e) => setUserAddress(e.target.value)}
-              placeholder="0x..."
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm"
+              placeholder={positionAddress || "0x..."}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm disabled:bg-gray-100 dark:disabled:bg-gray-900 disabled:cursor-not-allowed"
+              disabled={!!positionAddress}
             />
+            {positionAddress && (
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                포지션 조회에서 입력한 주소가 자동으로 설정됩니다.
+              </p>
+            )}
           </div>
 
           <div>
