@@ -561,6 +561,7 @@ export async function createWallet(): Promise<
     publicKey: string;
     address: string;
     balance: string;
+    balanceWei: string;
     nonce: number;
   }>
 > {
