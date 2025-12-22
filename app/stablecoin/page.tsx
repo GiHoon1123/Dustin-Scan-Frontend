@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import {
   depositCollateral,
   getAccount,
+  getStablecoinBalance,
   getStablecoinHealth,
   getStablecoinPosition,
   liquidateStablecoin,
@@ -60,6 +61,8 @@ export default function StablecoinPage() {
   const [position, setPosition] = useState<StablecoinPosition | null>(null);
   const [health, setHealth] = useState<boolean | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
+  const [stablecoinBalance, setStablecoinBalance] = useState<string | null>(null);
+  const [stablecoinBalanceWei, setStablecoinBalanceWei] = useState<string | null>(null);
   const [isLoadingPosition, setIsLoadingPosition] = useState(false);
   const [positionError, setPositionError] = useState<string | null>(null);
 
@@ -95,10 +98,11 @@ export default function StablecoinPage() {
     setPositionError(null);
 
     try {
-      const [positionRes, healthRes, accountRes] = await Promise.all([
+      const [positionRes, healthRes, accountRes, stablecoinBalanceRes] = await Promise.all([
         getStablecoinPosition(positionAddress),
         getStablecoinHealth(positionAddress),
         getAccount(positionAddress),
+        getStablecoinBalance(positionAddress).catch(() => ({ balance: "0", balanceWei: "0" })), // 실패해도 계속 진행
       ]);
       setPosition(positionRes);
       setHealth(healthRes.isHealthy);
@@ -106,6 +110,9 @@ export default function StablecoinPage() {
       const accountData = accountRes.data || accountRes;
       // balanceWei를 사용 (Wei 단위)
       setBalance(accountData.balanceWei || accountData.balance || "0");
+      // 스테이블코인 잔액 설정
+      setStablecoinBalance(stablecoinBalanceRes.balance);
+      setStablecoinBalanceWei(stablecoinBalanceRes.balanceWei);
       // 작업 폼의 주소도 자동으로 설정
       setUserAddress(positionAddress);
     } catch (err: any) {
@@ -113,6 +120,8 @@ export default function StablecoinPage() {
       setPosition(null);
       setHealth(null);
       setBalance(null);
+      setStablecoinBalance(null);
+      setStablecoinBalanceWei(null);
     } finally {
       setIsLoadingPosition(false);
     }
@@ -481,7 +490,7 @@ export default function StablecoinPage() {
         )}
 
         {position && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
               <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
                 현재 DSTN 잔고
@@ -492,6 +501,37 @@ export default function StablecoinPage() {
               {balance !== null && (
                 <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-mono">
                   {balance} Wei
+                </div>
+              )}
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+              <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                스테이블코인 잔고
+              </div>
+              <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                {stablecoinBalance !== null ? stablecoinBalance : "-"} 스테이블코인
+              </div>
+              {stablecoinBalanceWei !== null && (
+                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-mono">
+                  {stablecoinBalanceWei} Wei
+                </div>
+              )}
+              {stablecoinBalance !== null && position && (
+                <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                    <div className="flex justify-between">
+                      <span>부채:</span>
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">
+                        {position.debtAmount} 스테이블코인
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>총:</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        {stablecoinBalance} 스테이블코인
+                      </span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

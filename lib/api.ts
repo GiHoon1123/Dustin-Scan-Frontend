@@ -708,3 +708,58 @@ export async function liquidateStablecoin(
   const data = await res.json();
   return data.data || data;
 }
+
+// 네이티브 코인 전송
+export async function transferNative(
+  privateKey: string,
+  to: string,
+  amount: string
+): Promise<{ hash: string; status: string; blockNumber?: string; blockHash?: string }> {
+  const res = await fetch(`${API_BASE_URL}/accounts/transfer-native`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ privateKey, to, amount }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to transfer native coin");
+  }
+  const data = await res.json();
+  return data.data || data;
+}
+
+// 스테이블코인 전송
+export async function transferStablecoin(
+  privateKey: string,
+  to: string,
+  amount: string
+): Promise<{ hash: string; status: string; blockNumber?: string; blockHash?: string }> {
+  const res = await fetch(`${API_BASE_URL}/stablecoin/transfer-stablecoin`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ privateKey, to, amount }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to transfer stablecoin");
+  }
+  const data = await res.json();
+  return data.data || data;
+}
+
+// 스테이블코인 잔액 조회
+export async function getStablecoinBalance(
+  userAddress: string
+): Promise<{ balance: string; balanceWei: string }> {
+  const res = await fetch(`${API_BASE_URL}/stablecoin/balance/${userAddress}`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to get stablecoin balance");
+  }
+  const data = await res.json();
+  return data.data || data;
+}
