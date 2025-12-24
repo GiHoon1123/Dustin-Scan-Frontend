@@ -46,8 +46,8 @@ export default async function BlockDetailPage({
     <div className="container mx-auto px-4 py-4 md:py-8">
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-          Block #{block.number}
-        </h1>
+        Block #{block.number}
+      </h1>
         {fromCache && (
           <CacheIndicator
             cacheKey={isHash ? CacheKeys.blockByHash(id) : CacheKeys.blockByNumber(Number(id))}

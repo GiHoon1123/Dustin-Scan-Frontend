@@ -112,3 +112,44 @@ export interface StablecoinTransaction {
   hash: string;
   status: string;
 }
+
+export interface ValidatorInfo {
+  validatorAddress: string;
+  stakedAmount: string; // DSTN 단위
+  stakedAmountWei: string; // Wei 단위
+  status: string;
+  withdrawalAddress: string;
+  activatedAt: string;
+  exitRequestedAt: string;
+  totalRewards: string; // DSTN 단위
+  totalRewardsWei: string; // Wei 단위
+  slashedAmount: string; // DSTN 단위
+  slashedAmountWei: string; // Wei 단위
+}
+
+export interface ValidatorsResponse {
+  validators: ValidatorInfo[];
+  total: number;
+}
+
+export interface StakingStats {
+  totalStaked: string; // DSTN 단위
+  totalStakedWei: string; // Wei 단위
+  totalValidators: number;
+  activeValidators: number;
+  totalRewards: string; // DSTN 단위
+  totalRewardsWei: string; // Wei 단위
+  totalSlashed: string; // DSTN 단위
+  totalSlashedWei: string; // Wei 단위
+  minStake: string; // DSTN 단위
+  minStakeWei: string; // Wei 단위
+  maxValidators: number;
+  withdrawalDelay: string; // 초
+}
+
+export interface TransactionResult {
+  hash: string;
+  status: 'confirmed' | 'failed' | 'pending';
+  blockNumber?: string;
+  blockHash?: string;
+}

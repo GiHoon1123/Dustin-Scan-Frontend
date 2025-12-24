@@ -25,7 +25,7 @@ export default async function BlocksPage({
   let fromCache = false;
 
   try {
-    const blocksData = await getBlocks(page, 20);
+  const blocksData = await getBlocks(page, 20);
     blocks = blocksData.data.items;
     pagination = blocksData.data.pagination;
   } catch (error) {
@@ -42,8 +42,8 @@ export default async function BlocksPage({
 
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
         <div className="flex items-center justify-between">
-          <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
-            Total {pagination.totalCount} blocks
+        <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+          Total {pagination.totalCount} blocks
           </div>
           {fromCache && <CacheIndicator cacheKey={CacheKeys.blocks(page, 20)} />}
         </div>
@@ -56,7 +56,7 @@ export default async function BlocksPage({
           </div>
         ) : (
           blocks.map((block) => (
-            <BlockCard key={block.hash} block={block} />
+          <BlockCard key={block.hash} block={block} />
           ))
         )}
       </div>

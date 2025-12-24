@@ -25,7 +25,7 @@ export default async function TransactionsPage({
   let fromCache = false;
 
   try {
-    const txsData = await getTransactions(page, 20);
+  const txsData = await getTransactions(page, 20);
     transactions = txsData.data.items;
     pagination = txsData.data.pagination;
   } catch (error) {
@@ -45,8 +45,8 @@ export default async function TransactionsPage({
 
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
         <div className="flex items-center justify-between">
-          <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
-            Total {pagination.totalCount} transactions
+        <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+          Total {pagination.totalCount} transactions
           </div>
           {fromCache && <CacheIndicator cacheKey={CacheKeys.transactions(page, 20)} />}
         </div>
@@ -59,7 +59,7 @@ export default async function TransactionsPage({
           </div>
         ) : (
           transactions.map((tx) => (
-            <TransactionCard key={tx.hash} transaction={tx} />
+          <TransactionCard key={tx.hash} transaction={tx} />
           ))
         )}
       </div>

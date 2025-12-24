@@ -7,8 +7,12 @@ import {
   StablecoinHealth,
   StablecoinPosition,
   StablecoinTransaction,
+  StakingStats,
   TokenBalance,
   Transaction,
+  TransactionResult,
+  ValidatorInfo,
+  ValidatorsResponse,
 } from "./types";
 import { getCache, setCache, CacheKeys } from "./cache";
 
@@ -760,6 +764,100 @@ export async function getStablecoinBalance(
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.message || "Failed to get stablecoin balance");
+  }
+  const data = await res.json();
+  return data.data || data;
+}
+
+// 스테이킹 예치
+export async function depositStaking(
+  privateKey: string,
+  amount: string
+): Promise<TransactionResult> {
+  const res = await fetch(`${API_BASE_URL}/staking/deposit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ privateKey, amount }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to deposit staking");
+  }
+  const data = await res.json();
+  return data.data || data;
+}
+
+// 출금 주소 설정
+export async function setWithdrawalAddress(
+  privateKey: string,
+  withdrawalAddress: string
+): Promise<TransactionResult> {
+  const res = await fetch(`${API_BASE_URL}/staking/set-withdrawal-address`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ privateKey, withdrawalAddress }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to set withdrawal address");
+  }
+  const data = await res.json();
+  return data.data || data;
+}
+
+// 출금 요청
+export async function requestWithdrawal(
+  privateKey: string
+): Promise<TransactionResult> {
+  const res = await fetch(`${API_BASE_URL}/staking/request-withdrawal`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ privateKey }),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to request withdrawal");
+  }
+  const data = await res.json();
+  return data.data || data;
+}
+
+// Validator 정보 조회
+export async function getValidator(
+  address: string
+): Promise<ValidatorInfo> {
+  const res = await fetch(`${API_BASE_URL}/staking/validator/${address}`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to get validator");
+  }
+  const data = await res.json();
+  return data.data || data;
+}
+
+// Validator 목록 조회
+export async function getValidators(): Promise<ValidatorsResponse> {
+  const res = await fetch(`${API_BASE_URL}/staking/validators`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to get validators");
+  }
+  const data = await res.json();
+  return data.data || data;
+}
+
+// 스테이킹 통계 조회
+export async function getStakingStats(): Promise<StakingStats> {
+  const res = await fetch(`${API_BASE_URL}/staking/stats`);
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to get staking stats");
   }
   const data = await res.json();
   return data.data || data;

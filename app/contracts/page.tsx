@@ -26,7 +26,7 @@ export default async function ContractsPage({
   let fromCache = false;
 
   try {
-    const contractsData = await getContracts(page, 20);
+  const contractsData = await getContracts(page, 20);
     contracts = contractsData.data.items;
     pagination = contractsData.data.pagination;
   } catch (error) {
@@ -41,8 +41,8 @@ export default async function ContractsPage({
 
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
         <div className="flex items-center justify-between">
-          <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
-            Total {pagination.totalCount} contracts
+        <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+          Total {pagination.totalCount} contracts
           </div>
           {fromCache && <CacheIndicator cacheKey={CacheKeys.contracts(page, 20)} />}
         </div>
@@ -55,7 +55,7 @@ export default async function ContractsPage({
           </div>
         ) : (
           contracts.map((contract) => (
-            <ContractCard key={contract.address} contract={contract} />
+          <ContractCard key={contract.address} contract={contract} />
           ))
         )}
       </div>
