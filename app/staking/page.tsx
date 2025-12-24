@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   depositStaking,
   getAccount,
@@ -153,23 +153,7 @@ export default function StakingPage() {
   const [maxAmount, setMaxAmount] = useState<number | null>(null);
   const [withdrawalCooldown, setWithdrawalCooldown] = useState<number>(0); // 남은 쿨다운 시간 (초)
 
-  // 통계 로드
-  useEffect(() => {
-    const loadStats = async () => {
-      setIsLoadingStats(true);
-      try {
-        const statsData = await getStakingStats();
-        setStats(statsData);
-      } catch (err: any) {
-        console.error("Failed to load stats:", err);
-      } finally {
-        setIsLoadingStats(false);
-      }
-    };
-    loadStats();
-  }, []);
-
-  const handleLoadValidator = async () => {
+  const handleLoadValidator = useCallback(async () => {
     if (!validatorAddress.trim()) {
       setValidatorError("주소를 입력해주세요.");
       return;
@@ -207,7 +191,41 @@ export default function StakingPage() {
     } finally {
       setIsLoadingValidator(false);
     }
-  };
+  }, [validatorAddress]);
+
+  // URL 파라미터에서 주소 가져오기
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const address = params.get("address");
+      if (address && isValidAddress(address)) {
+        setValidatorAddress(address);
+      }
+    }
+  }, []);
+
+  // validatorAddress가 변경되면 자동 조회
+  useEffect(() => {
+    if (validatorAddress && isValidAddress(validatorAddress)) {
+      handleLoadValidator();
+    }
+  }, [validatorAddress, handleLoadValidator]);
+
+  // 통계 로드
+  useEffect(() => {
+    const loadStats = async () => {
+      setIsLoadingStats(true);
+      try {
+        const statsData = await getStakingStats();
+        setStats(statsData);
+      } catch (err: any) {
+        console.error("Failed to load stats:", err);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+    loadStats();
+  }, []);
 
   const handleSubmit = async () => {
     // Validator 조회 확인
@@ -492,9 +510,17 @@ export default function StakingPage() {
       {/* 통계 섹션 */}
       {stats && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            📊 스테이킹 통계
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              📊 스테이킹 통계
+            </h2>
+            <Link
+              href="/staking/validators"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold text-sm"
+            >
+              검증자 목록 보기 →
+            </Link>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
               <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">
