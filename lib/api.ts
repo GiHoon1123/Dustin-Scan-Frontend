@@ -15,9 +15,41 @@ import {
   ValidatorsResponse,
 } from "./types";
 import { getCache, setCache, CacheKeys } from "./cache";
+import { rateLimiter } from "./rate-limiter";
 
 // Next.js API Route 프록시 사용 (Mixed Content 문제 해결)
 const API_BASE_URL = ""; // 상대 경로 사용
+
+/**
+ * Rate Limiter가 적용된 fetch 래퍼
+ * 클라이언트 사이드에서만 rate limiting 적용
+ */
+async function rateLimitedFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  // 클라이언트 사이드에서만 rate limiting 체크
+  if (typeof window !== "undefined") {
+    if (!rateLimiter.canMakeRequest()) {
+      // 전역 알림 표시
+      const event = new CustomEvent("rate-limit-exceeded", {
+        detail: {
+          timeUntilNext: rateLimiter.getTimeUntilNextRequest(),
+        },
+      });
+      window.dispatchEvent(event);
+      
+      throw new Error(
+        "요청이 너무 많습니다. 1분에 최대 30개 요청만 가능합니다. 잠시 후 다시 시도해주세요."
+      );
+    }
+    
+    // 요청 기록
+    rateLimiter.recordRequest();
+  }
+  
+  return fetch(input, init);
+}
 
 // 블록 목록 조회
 export async function getBlocks(
@@ -31,7 +63,7 @@ export async function getBlocks(
   if (cached) {
     // API 호출 시도 (백그라운드 업데이트)
     try {
-      const res = await fetch(
+          const res = await rateLimitedFetch(
         `/api/blocks?page=${page}&limit=${limit}`,
         { cache: "no-store" }
       );
@@ -41,6 +73,10 @@ export async function getBlocks(
         return data;
       }
     } catch (error) {
+      // Rate limit 에러는 다시 throw
+      if (error instanceof Error && error.message.includes("요청이 너무 많습니다")) {
+        throw error;
+      }
       // API 실패 시 캐시된 데이터 반환
       return cached.data;
     }
@@ -49,7 +85,7 @@ export async function getBlocks(
   }
 
   // 캐시 없음: API 호출
-  const res = await fetch(
+  const res = await rateLimitedFetch(
     `/api/blocks?page=${page}&limit=${limit}`,
     { cache: "no-store" }
   );
@@ -73,7 +109,7 @@ export async function getBlockByNumber(
   const cached = getCache<ApiResponse<Block>>(cacheKey);
   if (cached) {
     try {
-      const res = await fetch(`/api/blocks/number/${number}`, {
+      const res = await rateLimitedFetch(`/api/blocks/number/${number}`, {
         cache: "no-store",
       });
       if (res.ok) {
@@ -87,7 +123,7 @@ export async function getBlockByNumber(
     return cached.data;
   }
 
-  const res = await fetch(`/api/blocks/number/${number}`, {
+  const res = await rateLimitedFetch(`/api/blocks/number/${number}`, {
     cache: "no-store",
   });
   if (!res.ok) {
@@ -109,7 +145,7 @@ export async function getBlockByHash(
   const cached = getCache<ApiResponse<Block>>(cacheKey);
   if (cached) {
     try {
-      const res = await fetch(`/api/blocks/hash/${hash}`, {
+      const res = await rateLimitedFetch(`/api/blocks/hash/${hash}`, {
         cache: "no-store",
       });
       if (res.ok) {
@@ -123,7 +159,7 @@ export async function getBlockByHash(
     return cached.data;
   }
 
-  const res = await fetch(`/api/blocks/hash/${hash}`, {
+  const res = await rateLimitedFetch(`/api/blocks/hash/${hash}`, {
     cache: "no-store",
   });
   if (!res.ok) {
@@ -146,7 +182,7 @@ export async function getTransactions(
   const cached = getCache<PaginatedResponse<Transaction>>(cacheKey);
   if (cached) {
     try {
-      const res = await fetch(
+      const res = await rateLimitedFetch(
         `/api/transactions?page=${page}&limit=${limit}`,
         { cache: "no-store" }
       );
@@ -161,7 +197,7 @@ export async function getTransactions(
     return cached.data;
   }
 
-  const res = await fetch(
+  const res = await rateLimitedFetch(
     `/api/transactions?page=${page}&limit=${limit}`,
     { cache: "no-store" }
   );
@@ -184,7 +220,7 @@ export async function getTransactionByHash(
   const cached = getCache<ApiResponse<Transaction>>(cacheKey);
   if (cached) {
     try {
-      const res = await fetch(`/api/transactions/${hash}`, {
+      const res = await rateLimitedFetch(`/api/transactions/${hash}`, {
         cache: "no-store",
       });
       if (res.ok) {
@@ -198,7 +234,7 @@ export async function getTransactionByHash(
     return cached.data;
   }
 
-  const res = await fetch(`/api/transactions/${hash}`, {
+  const res = await rateLimitedFetch(`/api/transactions/${hash}`, {
     cache: "no-store",
   });
   if (!res.ok) {
@@ -222,7 +258,7 @@ export async function getTransactionsByAddress(
   const cached = getCache<PaginatedResponse<Transaction>>(cacheKey);
   if (cached) {
     try {
-      const res = await fetch(
+      const res = await rateLimitedFetch(
         `/api/transactions/address/${address}?page=${page}&limit=${limit}`,
         { cache: "no-store" }
       );
@@ -237,7 +273,7 @@ export async function getTransactionsByAddress(
     return cached.data;
   }
 
-  const res = await fetch(
+  const res = await rateLimitedFetch(
     `/api/transactions/address/${address}?page=${page}&limit=${limit}`,
     { cache: "no-store" }
   );
@@ -260,7 +296,7 @@ export async function getAccount(
   const cached = getCache<ApiResponse<Account>>(cacheKey);
   if (cached) {
     try {
-      const res = await fetch(`/api/accounts/${address}`, {
+      const res = await rateLimitedFetch(`/api/accounts/${address}`, {
         cache: "no-store",
       });
       if (res.ok) {
@@ -274,7 +310,7 @@ export async function getAccount(
     return cached.data;
   }
 
-  const res = await fetch(`/api/accounts/${address}`, {
+  const res = await rateLimitedFetch(`/api/accounts/${address}`, {
     cache: "no-store",
   });
   if (!res.ok) {
@@ -298,7 +334,7 @@ export async function getTokenBalancesByAddress(
   const cached = getCache<PaginatedResponse<TokenBalance>>(cacheKey);
   if (cached) {
     try {
-      const res = await fetch(
+      const res = await rateLimitedFetch(
         `/api/accounts/${address}/tokens?page=${page}&limit=${limit}`,
         { cache: "no-store" }
       );
@@ -313,7 +349,7 @@ export async function getTokenBalancesByAddress(
     return cached.data;
   }
 
-  const res = await fetch(
+  const res = await rateLimitedFetch(
     `/api/accounts/${address}/tokens?page=${page}&limit=${limit}`,
     { cache: "no-store" }
   );
@@ -337,7 +373,7 @@ export async function getContracts(
   const cached = getCache<PaginatedResponse<Contract>>(cacheKey);
   if (cached) {
     try {
-      const res = await fetch(
+      const res = await rateLimitedFetch(
         `/api/contracts?page=${page}&limit=${limit}`,
         { cache: "no-store" }
       );
@@ -352,7 +388,7 @@ export async function getContracts(
     return cached.data;
   }
 
-  const res = await fetch(
+  const res = await rateLimitedFetch(
     `/api/contracts?page=${page}&limit=${limit}`,
     { cache: "no-store" }
   );
@@ -375,7 +411,7 @@ export async function getContract(
   const cached = getCache<ApiResponse<Contract>>(cacheKey);
   if (cached) {
     try {
-      const res = await fetch(`/api/contracts/${address}`, {
+      const res = await rateLimitedFetch(`/api/contracts/${address}`, {
         cache: "no-store",
       });
       if (res.ok) {
@@ -389,7 +425,7 @@ export async function getContract(
     return cached.data;
   }
 
-  const res = await fetch(`/api/contracts/${address}`, {
+  const res = await rateLimitedFetch(`/api/contracts/${address}`, {
     cache: "no-store",
   });
   if (!res.ok) {
@@ -412,7 +448,7 @@ export async function getContractsByDeployer(
   const cached = getCache<PaginatedResponse<Contract>>(cacheKey);
   if (cached) {
     try {
-      const res = await fetch(
+      const res = await rateLimitedFetch(
         `/api/contracts/deployer/${address}?page=${page}&limit=${limit}`,
         { cache: "no-store" }
       );
@@ -427,7 +463,7 @@ export async function getContractsByDeployer(
     return cached.data;
   }
 
-  const res = await fetch(
+  const res = await rateLimitedFetch(
     `/api/contracts/deployer/${address}?page=${page}&limit=${limit}`,
     { cache: "no-store" }
   );
@@ -459,7 +495,7 @@ export async function callContract(
     body,
   });
 
-  const res = await fetch(url, {
+  const res = await rateLimitedFetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -497,7 +533,7 @@ export async function executeContract(
     body,
   });
 
-  const res = await fetch(url, {
+  const res = await rateLimitedFetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -537,7 +573,7 @@ export async function deployContract(bytecode: string): Promise<
     bodyLength: body.length,
   });
 
-  const res = await fetch(url, {
+  const res = await rateLimitedFetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -570,7 +606,7 @@ export async function createWallet(): Promise<
     nonce: number;
   }>
 > {
-  const res = await fetch(`/api/accounts/create-wallet`, {
+  const res = await rateLimitedFetch(`/api/accounts/create-wallet`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -588,7 +624,7 @@ export async function createWallet(): Promise<
 export async function getStablecoinPosition(
   userAddress: string
 ): Promise<StablecoinPosition> {
-  const res = await fetch(`/api/stablecoin/position/${userAddress}`, {
+  const res = await rateLimitedFetch(`/api/stablecoin/position/${userAddress}`, {
     cache: "no-store",
   });
   if (!res.ok) {
@@ -603,7 +639,7 @@ export async function getStablecoinPosition(
 export async function getStablecoinHealth(
   userAddress: string
 ): Promise<StablecoinHealth> {
-  const res = await fetch(`/api/stablecoin/health/${userAddress}`, {
+  const res = await rateLimitedFetch(`/api/stablecoin/health/${userAddress}`, {
     cache: "no-store",
   });
   if (!res.ok) {
@@ -619,7 +655,7 @@ export async function depositCollateral(
   privateKey: string,
   amount: string
 ): Promise<StablecoinTransaction> {
-  const res = await fetch(`/api/stablecoin/deposit`, {
+  const res = await rateLimitedFetch(`/api/stablecoin/deposit`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -640,7 +676,7 @@ export async function mintStablecoin(
   privateKey: string,
   stablecoinAmount: string
 ): Promise<StablecoinTransaction> {
-  const res = await fetch(`/api/stablecoin/mint`, {
+  const res = await rateLimitedFetch(`/api/stablecoin/mint`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -660,7 +696,7 @@ export async function redeemStablecoin(
   privateKey: string,
   stablecoinAmount: string
 ): Promise<StablecoinTransaction> {
-  const res = await fetch(`/api/stablecoin/redeem`, {
+  const res = await rateLimitedFetch(`/api/stablecoin/redeem`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -680,7 +716,7 @@ export async function withdrawCollateral(
   privateKey: string,
   amount: string
 ): Promise<StablecoinTransaction> {
-  const res = await fetch(`/api/stablecoin/withdraw`, {
+  const res = await rateLimitedFetch(`/api/stablecoin/withdraw`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -700,7 +736,7 @@ export async function liquidateStablecoin(
   privateKey: string,
   userAddress: string
 ): Promise<StablecoinTransaction> {
-  const res = await fetch(`/api/stablecoin/liquidate`, {
+  const res = await rateLimitedFetch(`/api/stablecoin/liquidate`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -721,7 +757,7 @@ export async function transferNative(
   to: string,
   amount: string
 ): Promise<{ hash: string; status: string; blockNumber?: string; blockHash?: string }> {
-  const res = await fetch(`/api/accounts/transfer-native`, {
+  const res = await rateLimitedFetch(`/api/accounts/transfer-native`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -742,7 +778,7 @@ export async function transferStablecoin(
   to: string,
   amount: string
 ): Promise<{ hash: string; status: string; blockNumber?: string; blockHash?: string }> {
-  const res = await fetch(`/api/stablecoin/transfer-stablecoin`, {
+  const res = await rateLimitedFetch(`/api/stablecoin/transfer-stablecoin`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -761,7 +797,7 @@ export async function transferStablecoin(
 export async function getStablecoinBalance(
   userAddress: string
 ): Promise<{ balance: string; balanceWei: string }> {
-  const res = await fetch(`/api/stablecoin/balance/${userAddress}`);
+  const res = await rateLimitedFetch(`/api/stablecoin/balance/${userAddress}`);
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.message || "Failed to get stablecoin balance");
@@ -775,7 +811,7 @@ export async function depositStaking(
   privateKey: string,
   amount: string
 ): Promise<TransactionResult> {
-  const res = await fetch(`/api/staking/deposit`, {
+  const res = await rateLimitedFetch(`/api/staking/deposit`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -795,7 +831,7 @@ export async function setWithdrawalAddress(
   privateKey: string,
   withdrawalAddress: string
 ): Promise<TransactionResult> {
-  const res = await fetch(`/api/staking/set-withdrawal-address`, {
+  const res = await rateLimitedFetch(`/api/staking/set-withdrawal-address`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -814,7 +850,7 @@ export async function setWithdrawalAddress(
 export async function requestWithdrawal(
   privateKey: string
 ): Promise<TransactionResult> {
-  const res = await fetch(`/api/staking/request-withdrawal`, {
+  const res = await rateLimitedFetch(`/api/staking/request-withdrawal`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -833,7 +869,7 @@ export async function requestWithdrawal(
 export async function getValidator(
   address: string
 ): Promise<ValidatorInfo> {
-  const res = await fetch(`/api/staking/validator/${address}`);
+  const res = await rateLimitedFetch(`/api/staking/validator/${address}`);
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.message || "Failed to get validator");
@@ -844,7 +880,7 @@ export async function getValidator(
 
 // Validator 목록 조회
 export async function getValidators(): Promise<ValidatorsResponse> {
-  const res = await fetch(`/api/staking/validators`);
+  const res = await rateLimitedFetch(`/api/staking/validators`);
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.message || "Failed to get validators");
@@ -855,7 +891,7 @@ export async function getValidators(): Promise<ValidatorsResponse> {
 
 // 스테이킹 통계 조회
 export async function getStakingStats(): Promise<StakingStats> {
-  const res = await fetch(`/api/staking/stats`);
+  const res = await rateLimitedFetch(`/api/staking/stats`);
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.message || "Failed to get staking stats");
