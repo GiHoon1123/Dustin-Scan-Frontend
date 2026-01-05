@@ -9,9 +9,7 @@ export default function UniversalSearchBar() {
   const [isSearching, setIsSearching] = useState(false);
   const router = useRouter();
 
-  // 컴포넌트 내부에서 런타임에 환경 변수 읽기 (빌드 타임 주입 문제 해결)
-  const API_BASE_URL = useMemo(() => process.env.NEXT_PUBLIC_API_URL, []);
-
+  // Next.js API Route 프록시 사용 (Mixed Content 문제 해결)
   const detectInputType = (input: string) => {
     if (!input.trim()) {
       setHint("");
@@ -83,7 +81,7 @@ export default function UniversalSearchBar() {
         case "address":
           // 먼저 컨트랙트인지 확인
           const contractRes = await fetch(
-            `${API_BASE_URL}/contracts/${normalized}`,
+            `/api/contracts/${normalized}`,
             {
               cache: "no-store",
             }
@@ -93,7 +91,7 @@ export default function UniversalSearchBar() {
             router.push(`/contracts/${normalized}`);
           } else {
             const accountRes = await fetch(
-              `${API_BASE_URL}/accounts/${normalized}`,
+              `/api/accounts/${normalized}`,
               {
                 cache: "no-store",
               }
@@ -109,7 +107,7 @@ export default function UniversalSearchBar() {
         case "hash":
           // 클라이언트에서 순차 조회: 블록 해시 → 트랜잭션 해시
           const blockRes = await fetch(
-            `${API_BASE_URL}/blocks/hash/${normalized}`,
+            `/api/blocks/hash/${normalized}`,
             {
               cache: "no-store",
             }
@@ -120,7 +118,7 @@ export default function UniversalSearchBar() {
           } else {
             // 블록이 아니면 트랜잭션 확인
             const txRes = await fetch(
-              `${API_BASE_URL}/transactions/${normalized}`,
+              `/api/transactions/${normalized}`,
               {
                 cache: "no-store",
               }
