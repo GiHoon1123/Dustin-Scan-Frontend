@@ -1,35 +1,52 @@
+"use client";
+
 import ABIUploadForm from "@/components/ABIUploadForm";
 import BytecodeViewer from "@/components/BytecodeViewer";
 import ContractInteraction from "@/components/ContractInteraction";
 import ContractLimitationNotice from "@/components/ContractLimitationNotice";
+import DataLoader from "@/components/DataLoader";
 import { getContract } from "@/lib/api";
+import { CacheKeys } from "@/lib/cache";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useParams } from "next/navigation";
+import type { Contract } from "@/lib/types";
 
-export default async function ContractDetailPage({
-  params,
-}: {
-  params: Promise<{ address: string }>;
-}) {
-  const { address } = await params;
-
-  let contract;
-  try {
-    const contractData = await getContract(address);
-    contract = contractData.data;
-  } catch (error: any) {
-    console.error("Contract fetch error:", error);
-    console.error("Address:", address);
-    notFound();
-  }
-
-  const isDeployed = contract.status === 1;
+export default function ContractDetailPage() {
+  const params = useParams();
+  const address = params.address as string;
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
-      <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6">
-        {contract.name || "Contract"}
-      </h1>
+      <DataLoader
+        cacheKey={CacheKeys.contract(address)}
+        loadData={async () => {
+          const contractData = await getContract(address);
+          return contractData.data as Contract;
+        }}
+        render={(contract, isLoading, fromCache) => {
+          if (isLoading) {
+            return (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+                로딩 중...
+              </div>
+            );
+          }
+
+          if (!contract) {
+            return (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+                컨트랙트를 찾을 수 없습니다.
+              </div>
+            );
+          }
+
+          const isDeployed = contract.status === 1;
+
+          return (
+            <>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4 md:mb-6">
+                {contract.name || "Contract"}
+              </h1>
 
       {/* 제한사항 안내 */}
       <ContractLimitationNotice />
@@ -142,6 +159,10 @@ export default async function ContractDetailPage({
           </pre>
         </div>
       )}
+            </>
+          );
+        }}
+      />
     </div>
   );
 }

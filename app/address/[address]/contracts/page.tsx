@@ -1,56 +1,22 @@
+"use client";
+
 import ContractCard from "@/components/ContractCard";
 import Pagination from "@/components/Pagination";
-import { getAccount, getContractsByDeployer } from "@/lib/api";
+import DataLoader from "@/components/DataLoader";
+import { getContractsByDeployer } from "@/lib/api";
+import { CacheKeys } from "@/lib/cache";
 import type { Contract } from "@/lib/types";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
 
 const CONTRACTS_PER_PAGE = 20;
 
-export default async function AddressContractsPage({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ address: string }>;
-  searchParams: Promise<{ page?: string }>;
-}) {
-  const { address } = await params;
-  const searchParamsData = await searchParams;
-  const page = Math.max(1, Number(searchParamsData.page) || 1);
-
-  try {
-    await getAccount(address);
-  } catch (error) {
-    console.error("Address contracts fetch error:", error);
-    notFound();
-  }
-
-  let contracts: Contract[] = [];
-  let pagination = {
-    currentPage: page,
-    pageSize: CONTRACTS_PER_PAGE,
-    totalCount: 0,
-    totalPages: 1,
-    hasNext: false,
-    hasPrevious: false,
-  };
-
-  try {
-    const contractsData = await getContractsByDeployer(
-      address,
-      page,
-      CONTRACTS_PER_PAGE
-    );
-    contracts = contractsData.data.items;
-    pagination =
-      contractsData.data.pagination ??
-      {
-        ...pagination,
-        totalCount: contracts.length,
-      };
-  } catch (error) {
-    console.error("Contracts fetch error:", error);
-  }
+function AddressContractsPageContent() {
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const address = params.address as string;
+  const page = Math.max(1, Number(searchParams.get("page")) || 1);
 
   return (
     <div className="container mx-auto px-4 py-4 md:py-8">
@@ -71,31 +37,67 @@ export default async function AddressContractsPage({
         </Link>
       </div>
 
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
-        <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
-          Showing {contracts.length} of {pagination.totalCount} deployed contracts
+      <DataLoader
+        cacheKey={CacheKeys.contractsByDeployer(address, page, CONTRACTS_PER_PAGE)}
+        loadData={async () => {
+          const contractsData = await getContractsByDeployer(
+            address,
+            page,
+            CONTRACTS_PER_PAGE
+          );
+          return contractsData.data;
+        }}
+        render={(data, isLoading, fromCache) => (
+          <>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
+              <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                {isLoading
+                  ? "로딩 중..."
+                  : `Showing ${data?.items.length || 0} of ${data?.pagination.totalCount || 0} deployed contracts`}
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300 text-center">
+                로딩 중...
+              </div>
+            ) : data && data.items.length > 0 ? (
+              <>
+                <div className="space-y-3 md:space-y-4">
+                  {data.items.map((contract: Contract) => (
+                    <ContractCard key={contract.address} contract={contract} />
+                  ))}
+                </div>
+                {data.pagination.totalPages > 1 && (
+                  <Pagination
+                    currentPage={data.pagination.currentPage}
+                    totalPages={data.pagination.totalPages}
+                    basePath={`/address/${address}/contracts`}
+                  />
+                )}
+              </>
+            ) : (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300">
+                이 주소가 배포한 컨트랙트가 없습니다.
+              </div>
+            )}
+          </>
+        )}
+      />
+    </div>
+  );
+}
+
+export default function AddressContractsPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-4 md:py-8">
+        <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+          로딩 중...
         </div>
       </div>
-
-      {contracts.length === 0 ? (
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300">
-          이 주소가 배포한 컨트랙트가 없습니다.
-        </div>
-      ) : (
-        <div className="space-y-3 md:space-y-4">
-          {contracts.map((contract) => (
-            <ContractCard key={contract.address} contract={contract} />
-          ))}
-        </div>
-      )}
-
-      {pagination.totalPages > 1 && (
-        <Pagination
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          basePath={`/address/${address}/contracts`}
-        />
-      )}
-    </div>
+    }>
+      <AddressContractsPageContent />
+    </Suspense>
   );
 }
