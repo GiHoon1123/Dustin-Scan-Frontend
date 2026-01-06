@@ -68,7 +68,7 @@ function AddressContractsPageContent() {
                     <ContractCard key={contract.address} contract={contract} />
                   ))}
                 </div>
-                {data.pagination.totalPages > 1 && (
+                {data?.pagination && data.pagination.totalPages > 1 && (
                   <Pagination
                     currentPage={data.pagination.currentPage}
                     totalPages={data.pagination.totalPages}

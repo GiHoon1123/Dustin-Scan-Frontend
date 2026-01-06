@@ -34,7 +34,7 @@ function ContractsPageContent() {
                 <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                   {isLoading
                     ? "로딩 중..."
-                    : `Total ${data?.pagination.totalCount || 0} contracts`}
+                    : `Total ${data?.pagination?.totalCount || 0} contracts`}
                 </div>
                 {fromCache && !isLoading && (
                   <CacheIndicator cacheKey={CacheKeys.contracts(page, 20)} />
@@ -58,7 +58,7 @@ function ContractsPageContent() {
               )}
             </div>
 
-            {data && (
+            {data && data.pagination && (
               <Pagination
                 currentPage={data.pagination.currentPage}
                 totalPages={data.pagination.totalPages}

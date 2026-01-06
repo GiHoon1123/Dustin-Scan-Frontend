@@ -59,7 +59,7 @@ function BlocksPageContent() {
               )}
             </div>
 
-            {data && (
+            {data && data.pagination && (
               <Pagination
                 currentPage={data.pagination.currentPage}
                 totalPages={data.pagination.totalPages}
