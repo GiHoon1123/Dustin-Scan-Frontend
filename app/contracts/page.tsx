@@ -47,7 +47,7 @@ function ContractsPageContent() {
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-300 text-center">
                   로딩 중...
                 </div>
-              ) : data && data.items.length > 0 ? (
+              ) : data && data.items && data.items.length > 0 ? (
                 data.items.map((contract: any) => (
                   <ContractCard key={contract.address} contract={contract} />
                 ))
