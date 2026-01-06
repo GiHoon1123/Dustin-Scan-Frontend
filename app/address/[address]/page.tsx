@@ -1,6 +1,9 @@
+"use client";
+
 import ContractCard from "@/components/ContractCard";
 import TransactionCard from "@/components/TransactionCard";
 import CacheIndicator from "@/components/CacheIndicator";
+import DataLoader from "@/components/DataLoader";
 import {
   getAccount,
   getContractsByDeployer,
@@ -8,96 +11,115 @@ import {
   getTransactionsByAddress,
 } from "@/lib/api";
 import { CacheKeys } from "@/lib/cache";
-import { Contract, TokenBalance } from "@/lib/types";
+import { Account, Contract, TokenBalance } from "@/lib/types";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
 
-export default async function AddressPage({
-  params,
-}: {
-  params: Promise<{ address: string }>;
-}) {
-  const { address } = await params;
-
-  let account: any = null;
-  let transactions: any[] = [];
-  let pagination = {
+export default function AddressPage() {
+  const params = useParams();
+  const address = params.address as string;
+  
+  const [account, setAccount] = useState<Account | null>(null);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [pagination, setPagination] = useState({
     currentPage: 1,
     pageSize: 50,
     totalCount: 0,
     totalPages: 1,
     hasNext: false,
     hasPrevious: false,
-  };
-  let contractPreview: Contract[] = [];
-  let contractPreviewPagination = {
-    currentPage: 1,
-    pageSize: 10,
-    totalCount: 0,
-    totalPages: 1,
-    hasNext: false,
-    hasPrevious: false,
-  };
-  let tokenPreview: TokenBalance[] = [];
-  let tokenPreviewPagination = {
-    currentPage: 1,
-    pageSize: 10,
-    totalCount: 0,
-    totalPages: 1,
-    hasNext: false,
-    hasPrevious: false,
-  };
-  let accountFromCache = false;
-  let txsFromCache = false;
+  });
+  const [contractPreview, setContractPreview] = useState<Contract[]>([]);
+  const [tokenPreview, setTokenPreview] = useState<TokenBalance[]>([]);
+  const [isLoadingAccount, setIsLoadingAccount] = useState(true);
+  const [isLoadingTxs, setIsLoadingTxs] = useState(true);
+  const [isLoadingContracts, setIsLoadingContracts] = useState(true);
+  const [isLoadingTokens, setIsLoadingTokens] = useState(true);
+  const [accountFromCache, setAccountFromCache] = useState(false);
+  const [txsFromCache, setTxsFromCache] = useState(false);
 
-  try {
-    const accountData = await getAccount(address);
-    account = accountData.data;
-  } catch (error) {
-    // 캐시 확인은 API 함수 내부에서 처리됨
-    accountFromCache = true;
-    // account가 없으면 기본 정보로 표시 (새로 생성된 지갑일 수 있음)
-    if (!account) {
-      account = {
-        address: address,
-        balance: "0",
-        balanceWei: "0",
-        nonce: 0,
-        txCount: 0,
-      };
-    }
-  }
+  // 계정 정보 로드
+  useEffect(() => {
+    const loadAccount = async () => {
+      setIsLoadingAccount(true);
+      try {
+        const accountData = await getAccount(address);
+        setAccount(accountData.data);
+        setAccountFromCache(false);
+      } catch (error) {
+        // 캐시 확인은 API 함수 내부에서 처리됨
+        setAccountFromCache(true);
+        // account가 없으면 기본 정보로 표시 (새로 생성된 지갑일 수 있음)
+        setAccount({
+          address: address,
+          balance: "0",
+          balanceWei: "0",
+          nonce: 0,
+          txCount: 0,
+        });
+      } finally {
+        setIsLoadingAccount(false);
+      }
+    };
+    loadAccount();
+  }, [address]);
 
-  try {
-    const txsData = await getTransactionsByAddress(address, 1, 50);
-    transactions = txsData.data.items;
-    pagination = txsData.data.pagination;
-  } catch (error) {
-    txsFromCache = true;
-  }
+  // 트랜잭션 로드
+  useEffect(() => {
+    const loadTransactions = async () => {
+      setIsLoadingTxs(true);
+      try {
+        const txsData = await getTransactionsByAddress(address, 1, 50);
+        setTransactions(txsData.data.items);
+        setPagination(txsData.data.pagination);
+        setTxsFromCache(false);
+      } catch (error) {
+        setTxsFromCache(true);
+        setTransactions([]);
+      } finally {
+        setIsLoadingTxs(false);
+      }
+    };
+    loadTransactions();
+  }, [address]);
 
-  try {
-    const contractsData = await getContractsByDeployer(address, 1, 10);
-    contractPreview = contractsData.data.items;
-    contractPreviewPagination = contractsData.data.pagination;
-  } catch (error) {
-    console.error("Contract preview fetch error:", error);
-  }
+  // 컨트랙트 로드
+  useEffect(() => {
+    const loadContracts = async () => {
+      setIsLoadingContracts(true);
+      try {
+        const contractsData = await getContractsByDeployer(address, 1, 10);
+        setContractPreview(contractsData.data.items);
+      } catch (error) {
+        console.error("Contract preview fetch error:", error);
+        setContractPreview([]);
+      } finally {
+        setIsLoadingContracts(false);
+      }
+    };
+    loadContracts();
+  }, [address]);
 
-  try {
-    const tokensData = await getTokenBalancesByAddress(address, 1, 10);
-    tokenPreview = tokensData.data.items;
-    tokenPreviewPagination =
-      tokensData.data.pagination ?? {
-        ...tokenPreviewPagination,
-        totalCount: tokenPreview.length,
-      };
-  } catch (error) {
-    console.error("Token preview fetch error:", error);
-  }
+  // 토큰 로드
+  useEffect(() => {
+    const loadTokens = async () => {
+      setIsLoadingTokens(true);
+      try {
+        const tokensData = await getTokenBalancesByAddress(address, 1, 10);
+        setTokenPreview(tokensData.data.items);
+      } catch (error) {
+        console.error("Token preview fetch error:", error);
+        setTokenPreview([]);
+      } finally {
+        setIsLoadingTokens(false);
+      }
+    };
+    loadTokens();
+  }, [address]);
 
-  const totalContracts = contractPreviewPagination.totalCount ?? 0;
-  const totalTokens = tokenPreviewPagination.totalCount ?? tokenPreview.length;
+  const totalContracts = contractPreview.length;
+  const totalTokens = tokenPreview.length;
   const transactionsToDisplay = transactions.slice(0, 10);
 
   return (
@@ -113,26 +135,35 @@ export default async function AddressPage({
 
       {/* Account Info */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 mb-4 md:mb-8">
-        <div className="space-y-4">
-          <InfoRow label="Address" value={account.address} mono />
-          <div className="flex flex-col sm:flex-row border-b border-gray-200 dark:border-gray-700 pb-3">
-            <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 w-full sm:w-48 mb-1 sm:mb-0">
-              Balance:
-            </div>
-            <div className="flex-1">
-              <div className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
-                {account.balance} DSTN
-              </div>
-              <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-mono">
-                {account.balanceWei} Wei
-              </div>
-            </div>
+        {isLoadingAccount ? (
+          <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+            로딩 중...
           </div>
-          <InfoRow label="Nonce" value={account.nonce.toString()} />
-          <InfoRow
-            label="Total Transactions"
-            value={account.txCount.toString()}
-          />
+        ) : account ? (
+          <div className="space-y-4">
+            <InfoRow label="Address" value={account.address} mono />
+            <div className="flex flex-col sm:flex-row border-b border-gray-200 dark:border-gray-700 pb-3">
+              <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 w-full sm:w-48 mb-1 sm:mb-0">
+                Balance:
+              </div>
+              <div className="flex-1">
+                <div className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
+                  {account.balance || "0"} DSTN
+                </div>
+                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 font-mono">
+                  {account.balanceWei || "0"} Wei
+                </div>
+              </div>
+            </div>
+            {account.nonce !== undefined && account.nonce !== null && (
+              <InfoRow label="Nonce" value={account.nonce.toString()} />
+            )}
+            {account.txCount !== undefined && account.txCount !== null && (
+              <InfoRow
+                label="Total Transactions"
+                value={account.txCount.toString()}
+              />
+            )}
           <div className="flex flex-col sm:flex-row border-b border-gray-200 dark:border-gray-700 pb-3">
             <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 w-full sm:w-48 mb-1 sm:mb-0">
               Token Holdings:
@@ -151,6 +182,11 @@ export default async function AddressPage({
             </div>
           </div>
         </div>
+        ) : (
+          <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+            계정 정보를 불러올 수 없습니다.
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">

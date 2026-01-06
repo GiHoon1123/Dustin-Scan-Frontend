@@ -48,6 +48,9 @@ async function rateLimitedFetch(
     rateLimiter.recordRequest();
   }
   
+  // 클라이언트 사이드에서는 상대 경로를 그대로 사용
+  // Next.js API 라우트를 통해 프록시되므로 Mixed Content 문제 해결됨
+  // 서버 사이드에서도 상대 경로를 사용할 수 있음 (Next.js가 자동 처리)
   return fetch(input, init);
 }
 
@@ -123,17 +126,24 @@ export async function getBlockByNumber(
     return cached.data;
   }
 
-  const res = await rateLimitedFetch(`/api/blocks/number/${number}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) {
+  try {
+    const res = await rateLimitedFetch(`/api/blocks/number/${number}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      const cached = getCache<ApiResponse<Block>>(cacheKey);
+      if (cached) return cached.data;
+      throw new Error("Failed to fetch block");
+    }
+    const data = await res.json();
+    setCache(cacheKey, data);
+    return data;
+  } catch (error) {
+    // 서버 사이드에서 에러 발생 시 재시도하지 않고 바로 throw
     const cached = getCache<ApiResponse<Block>>(cacheKey);
     if (cached) return cached.data;
-    throw new Error("Failed to fetch block");
+    throw error;
   }
-  const data = await res.json();
-  setCache(cacheKey, data);
-  return data;
 }
 
 // 블록 상세 조회 (해시)
@@ -234,17 +244,24 @@ export async function getTransactionByHash(
     return cached.data;
   }
 
-  const res = await rateLimitedFetch(`/api/transactions/${hash}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) {
+  try {
+    const res = await rateLimitedFetch(`/api/transactions/${hash}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      const cached = getCache<ApiResponse<Transaction>>(cacheKey);
+      if (cached) return cached.data;
+      throw new Error("Failed to fetch transaction");
+    }
+    const data = await res.json();
+    setCache(cacheKey, data);
+    return data;
+  } catch (error) {
+    // 서버 사이드에서 에러 발생 시 재시도하지 않고 바로 throw
     const cached = getCache<ApiResponse<Transaction>>(cacheKey);
     if (cached) return cached.data;
-    throw new Error("Failed to fetch transaction");
+    throw error;
   }
-  const data = await res.json();
-  setCache(cacheKey, data);
-  return data;
 }
 
 // 주소별 트랜잭션 조회
@@ -463,18 +480,56 @@ export async function getContractsByDeployer(
     return cached.data;
   }
 
-  const res = await rateLimitedFetch(
-    `/api/contracts/deployer/${address}?page=${page}&limit=${limit}`,
-    { cache: "no-store" }
-  );
-  if (!res.ok) {
+  try {
+    const res = await rateLimitedFetch(
+      `/api/contracts/deployer/${address}?page=${page}&limit=${limit}`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) {
+      const cached = getCache<PaginatedResponse<Contract>>(cacheKey);
+      if (cached) return cached.data;
+      // 서버 사이드에서는 에러 대신 빈 결과 반환
+      if (typeof window === "undefined") {
+        return {
+          data: {
+            items: [],
+            pagination: {
+              currentPage: page,
+              pageSize: limit,
+              totalCount: 0,
+              totalPages: 0,
+              hasNext: false,
+              hasPrevious: false,
+            },
+          },
+        };
+      }
+      throw new Error("Failed to fetch contracts by deployer");
+    }
+    const data = await res.json();
+    setCache(cacheKey, data);
+    return data;
+  } catch (error) {
+    // 서버 사이드에서는 에러 대신 빈 결과 반환
+    if (typeof window === "undefined") {
+      return {
+        data: {
+          items: [],
+          pagination: {
+            currentPage: page,
+            pageSize: limit,
+            totalCount: 0,
+            totalPages: 0,
+            hasNext: false,
+            hasPrevious: false,
+          },
+        },
+      };
+    }
     const cached = getCache<PaginatedResponse<Contract>>(cacheKey);
     if (cached) return cached.data;
-    throw new Error("Failed to fetch contracts by deployer");
+    throw error;
   }
-  const data = await res.json();
-  setCache(cacheKey, data);
-  return data;
 }
 
 // 컨트랙트 읽기 메서드 호출 (view, pure)

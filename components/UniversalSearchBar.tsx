@@ -105,27 +105,28 @@ export default function UniversalSearchBar() {
           }
           break;
         case "hash":
-          // 클라이언트에서 순차 조회: 블록 해시 → 트랜잭션 해시
-          const blockRes = await fetch(
-            `/api/blocks/hash/${normalized}`,
+          // 클라이언트에서 순차 조회: 트랜잭션 해시 → 블록 해시
+          // 트랜잭션이 더 자주 검색되므로 먼저 확인
+          const txRes = await fetch(
+            `/api/transactions/${normalized}`,
             {
               cache: "no-store",
             }
           );
 
-          if (blockRes.ok) {
-            router.push(`/blocks/${normalized}`);
+          if (txRes.ok) {
+            router.push(`/transactions/${normalized}`);
           } else {
-            // 블록이 아니면 트랜잭션 확인
-            const txRes = await fetch(
-              `/api/transactions/${normalized}`,
+            // 트랜잭션이 아니면 블록 해시 확인
+            const blockRes = await fetch(
+              `/api/blocks/hash/${normalized}`,
               {
                 cache: "no-store",
               }
             );
 
-            if (txRes.ok) {
-              router.push(`/transactions/${normalized}`);
+            if (blockRes.ok) {
+              router.push(`/blocks/${normalized}`);
             } else {
               router.push("/not-found");
             }
