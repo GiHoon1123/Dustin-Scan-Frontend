@@ -1,7 +1,7 @@
 /**
  * Rate Limiter
  * 
- * 1분에 최대 30개 요청만 허용
+ * 1분에 최대 100개 요청만 허용
  */
 
 interface RequestRecord {
@@ -11,7 +11,7 @@ interface RequestRecord {
 
 class RateLimiter {
   private requests: RequestRecord[] = [];
-  private readonly maxRequests = 30;
+  private readonly maxRequests = 100;
   private readonly timeWindow = 60 * 1000; // 1분 (밀리초)
 
   /**
@@ -46,19 +46,11 @@ class RateLimiter {
       (record) => now - record.timestamp < this.timeWindow
     );
 
-    // 현재 시간대의 마지막 기록 확인
-    const lastRecord = this.requests[this.requests.length - 1];
-    
-    if (lastRecord && now - lastRecord.timestamp < 1000) {
-      // 같은 초 내 요청이면 카운트 증가
-      lastRecord.count += 1;
-    } else {
-      // 새로운 시간대면 새 기록 추가
-      this.requests.push({
-        timestamp: now,
-        count: 1,
-      });
-    }
+    // 각 요청을 개별적으로 기록 (더 정확한 카운팅)
+    this.requests.push({
+      timestamp: now,
+      count: 1,
+    });
   }
 
   /**
@@ -102,4 +94,5 @@ class RateLimiter {
 
 // 싱글톤 인스턴스
 export const rateLimiter = new RateLimiter();
+
 

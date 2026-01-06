@@ -55,7 +55,7 @@ export function RateLimitProvider({
       {children}
       {showToast && (
         <RateLimitToast
-          message="요청이 너무 많습니다. 1분에 최대 30개 요청만 가능합니다. 잠시 후 다시 시도해주세요."
+          message="요청이 너무 많습니다. 1분에 최대 100개 요청만 가능합니다. 잠시 후 다시 시도해주세요."
           timeUntilNext={timeUntilNext}
           onClose={() => setShowToast(false)}
         />

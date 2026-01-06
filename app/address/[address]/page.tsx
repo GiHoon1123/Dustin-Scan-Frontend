@@ -56,9 +56,15 @@ export default async function AddressPage({
   } catch (error) {
     // 캐시 확인은 API 함수 내부에서 처리됨
     accountFromCache = true;
-    // account가 없으면 notFound
+    // account가 없으면 기본 정보로 표시 (새로 생성된 지갑일 수 있음)
     if (!account) {
-      notFound();
+      account = {
+        address: address,
+        balance: "0",
+        balanceWei: "0",
+        nonce: 0,
+        txCount: 0,
+      };
     }
   }
 
