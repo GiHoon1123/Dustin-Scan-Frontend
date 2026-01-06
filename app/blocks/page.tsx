@@ -8,8 +8,9 @@ import DataLoader from "@/components/DataLoader";
 import { getBlocks } from "@/lib/api";
 import { CacheKeys } from "@/lib/cache";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function BlocksPage() {
+function BlocksPageContent() {
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
 
@@ -69,5 +70,19 @@ export default function BlocksPage() {
         )}
       />
     </div>
+  );
+}
+
+export default function BlocksPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-4 md:py-8">
+        <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+          로딩 중...
+        </div>
+      </div>
+    }>
+      <BlocksPageContent />
+    </Suspense>
   );
 }

@@ -488,44 +488,12 @@ export async function getContractsByDeployer(
     if (!res.ok) {
       const cached = getCache<PaginatedResponse<Contract>>(cacheKey);
       if (cached) return cached.data;
-      // 서버 사이드에서는 에러 대신 빈 결과 반환
-      if (typeof window === "undefined") {
-        return {
-          data: {
-            items: [],
-            pagination: {
-              currentPage: page,
-              pageSize: limit,
-              totalCount: 0,
-              totalPages: 0,
-              hasNext: false,
-              hasPrevious: false,
-            },
-          },
-        };
-      }
       throw new Error("Failed to fetch contracts by deployer");
     }
     const data = await res.json();
     setCache(cacheKey, data);
     return data;
   } catch (error) {
-    // 서버 사이드에서는 에러 대신 빈 결과 반환
-    if (typeof window === "undefined") {
-      return {
-        data: {
-          items: [],
-          pagination: {
-            currentPage: page,
-            pageSize: limit,
-            totalCount: 0,
-            totalPages: 0,
-            hasNext: false,
-            hasPrevious: false,
-          },
-        },
-      };
-    }
     const cached = getCache<PaginatedResponse<Contract>>(cacheKey);
     if (cached) return cached.data;
     throw error;

@@ -8,8 +8,9 @@ import DataLoader from "@/components/DataLoader";
 import { getTransactions } from "@/lib/api";
 import { CacheKeys } from "@/lib/cache";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function TransactionsPage() {
+function TransactionsPageContent() {
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page")) || 1;
 
@@ -72,5 +73,19 @@ export default function TransactionsPage() {
         )}
       />
     </div>
+  );
+}
+
+export default function TransactionsPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-4 md:py-8">
+        <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+          로딩 중...
+        </div>
+      </div>
+    }>
+      <TransactionsPageContent />
+    </Suspense>
   );
 }
