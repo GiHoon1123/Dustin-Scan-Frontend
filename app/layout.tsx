@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import ServerMaintenanceBanner from "@/components/ServerMaintenanceBanner";
 import { RateLimitProvider } from "@/components/RateLimitProvider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -31,6 +32,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
       >
         <RateLimitProvider>
+          <ServerMaintenanceBanner />
           <Header />
           <main className="flex-grow">{children}</main>
           <Footer />
