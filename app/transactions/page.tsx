@@ -38,7 +38,7 @@ function TransactionsPageContent() {
                 <div className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                   {isLoading
                     ? "로딩 중..."
-                    : `Total ${data?.pagination.totalCount || 0} transactions`}
+                    : `Total ${data?.pagination?.totalCount || 0} transactions`}
                 </div>
                 {fromCache && !isLoading && (
                   <CacheIndicator cacheKey={CacheKeys.transactions(page, 20)} />
